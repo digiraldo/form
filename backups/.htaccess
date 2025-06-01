@@ -1,0 +1,27 @@
+# Protección del directorio de backups
+# Solo permitir acceso directo a archivos .zip
+<Files "*.zip">
+    # Se permite el acceso directo a archivos ZIP
+    # La autenticación se maneja desde PHP
+    Require all granted
+</Files>
+
+# Denegar acceso a todos los demás archivos
+<Files "*">
+    Require all denied
+</Files>
+
+# Permitir específicamente archivos ZIP
+<Files "backup_formularios_rbac_*.zip">
+    Require all granted
+</Files>
+
+# Prevenir listado de directorio
+Options -Indexes
+
+# Configuración adicional de seguridad
+<IfModule mod_headers.c>
+    Header always set X-Content-Type-Options nosniff
+    Header always set X-Frame-Options DENY
+    Header always set X-XSS-Protection "1; mode=block"
+</IfModule>

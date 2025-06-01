@@ -1,0 +1,1635 @@
+/* Estilos para el sistema RBAC Multi-Área */
+
+/* Indicadores de permisos en tabla de formularios */
+.permission-indicator {
+    transition: all 0.2s ease-in-out;
+    position: relative;
+}
+
+.permission-indicator-empty {
+    opacity: 0.7;
+    transition: opacity 0.3s ease;
+}
+
+.permission-indicator-empty:hover {
+    opacity: 1;
+}
+
+.permission-badge {
+    padding: 0.5rem 0.75rem;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    border-radius: 50px;
+    font-weight: 500;
+    letter-spacing: 0.3px;
+    position: relative;
+    z-index: 1;
+    overflow: hidden;
+}
+
+.permission-badge::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, rgba(255,255,255,0.25) 0%, rgba(255,255,255,0) 60%);
+    z-index: -1;
+    transition: all 0.3s ease;
+}
+
+.editor-avatar {
+    transition: all 0.2s ease-in-out;
+    border-width: 2px !important;
+    position: relative;
+    overflow: hidden;
+}
+
+.editor-avatar::after {
+    content: '';
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    background-image: linear-gradient(45deg, rgba(255,255,255,0.2) 0%, rgba(255,255,255,0) 60%);
+    border-radius: 50%;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.editor-avatar:hover {
+    transform: translateY(-3px);
+    z-index: 10;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.editor-avatar:hover::after {
+    opacity: 1;
+}
+
+/* Estilos para diferenciar roles en avatares */
+.editor-avatar.role-owner {
+    border-color: #198754 !important;
+    box-shadow: 0 0 0 2px rgba(25, 135, 84, 0.3);
+}
+
+.editor-avatar.role-admin {
+    border-color: #0d6efd !important;
+    box-shadow: 0 0 0 2px rgba(13, 110, 253, 0.3);
+}
+
+.editor-avatar.role-editor {
+    border-color: #ffc107 !important;
+    box-shadow: 0 0 0 2px rgba(255, 193, 7, 0.3);
+}
+
+.editor-extra-badge {
+    padding: 0.25rem 0.5rem;
+    font-weight: bold;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15);
+}
+
+/* Tooltip de permisos personalizado */
+.permission-tooltip {
+    max-width: 520px !important; /* Aumentado de 480px para mostrar más información */
+    font-size: 0.95rem; /* Aumentado de 0.9rem para mejor legibilidad */
+    opacity: 1 !important;
+    pointer-events: none !important; /* Evitar interacciones que causen scroll */
+    z-index: 10000 !important;
+    position: fixed !important; /* Posición fija para evitar problemas de scroll */
+}
+
+.permission-tooltip .tooltip-inner {
+    padding: 1.8rem; /* Aumentado de 1.5rem para más espacio */
+    max-height: 400px; /* Aumentado de 350px para mostrar más contenido */
+    overflow: hidden; /* Sin scroll interno */
+    text-overflow: ellipsis;
+    word-wrap: break-word;
+    background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+    color: #212529;
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15), 0 8px 16px rgba(0, 0, 0, 0.1);
+    border-radius: 12px;
+    text-align: left;
+    position: relative;
+}
+
+.permission-tooltip .tooltip-inner::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, #0d6efd, #198754, #ffc107);
+    border-radius: 12px 12px 0 0;
+}
+
+.permission-tooltip .tooltip-arrow::before {
+    border-top-color: #ffffff !important;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+}
+
+/* Modo oscuro para tooltips de permisos */
+[data-bs-theme="dark"] .permission-tooltip .tooltip-inner {
+    background: linear-gradient(135deg, #1a202c 0%, #2d3748 100%);
+    color: #e2e8f0;
+    border-color: rgba(255, 255, 255, 0.1);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4), 0 8px 16px rgba(0, 0, 0, 0.2);
+}
+
+[data-bs-theme="dark"] .permission-tooltip .tooltip-arrow::before {
+    border-top-color: #1a202c !important;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+}
+
+.permission-tooltip-header {
+    font-weight: 600;
+    color: #0d6efd;
+    margin-bottom: 1rem;
+    border-bottom: 2px solid rgba(13, 110, 253, 0.1);
+    padding-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.permission-tooltip-header .title {
+    display: flex;
+    align-items: center;
+    font-size: 1rem;
+}
+
+.permission-tooltip-header i {
+    margin-right: 0.6rem;
+    font-size: 1.2rem;
+    color: #0d6efd;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.permission-tooltip-count {
+    padding: 0.4rem 0.8rem;
+    border-radius: 25px;
+    background: linear-gradient(135deg, rgba(13, 110, 253, 0.1), rgba(13, 110, 253, 0.05));
+    color: #0d6efd;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    font-size: 0.85rem;
+    border: 1px solid rgba(13, 110, 253, 0.2);
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 4px rgba(13, 110, 253, 0.1);
+}
+
+.permission-tooltip-count:hover {
+    background: linear-gradient(135deg, rgba(13, 110, 253, 0.2), rgba(13, 110, 253, 0.1));
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(13, 110, 253, 0.2);
+}
+
+.permission-tooltip-count i {
+    margin-right: 0.4rem;
+    font-size: 0.8rem;
+}
+
+.permission-users-list {
+    max-height: 200px;
+    overflow-y: auto;
+    margin-top: 0.75rem;
+    padding: 0.5rem;
+    background: rgba(248, 249, 250, 0.5);
+    border-radius: 8px;
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    scrollbar-width: thin;
+    scrollbar-color: rgba(13, 110, 253, 0.3) transparent;
+}
+
+.permission-users-list::-webkit-scrollbar {
+    width: 6px;
+}
+
+.permission-users-list::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.02);
+    border-radius: 3px;
+}
+
+.permission-users-list::-webkit-scrollbar-thumb {
+    background: linear-gradient(135deg, rgba(13, 110, 253, 0.3), rgba(13, 110, 253, 0.5));
+    border-radius: 3px;
+}
+
+.permission-users-list::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(135deg, rgba(13, 110, 253, 0.5), rgba(13, 110, 253, 0.7));
+}
+
+.permission-users-list li {
+    padding: 0.7rem 0.5rem;
+    display: flex;
+    align-items: center;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+    transition: all 0.25s ease;
+    border-radius: 6px;
+    margin-bottom: 0.3rem;
+    position: relative;
+}
+
+.permission-users-list li:hover {
+    background: linear-gradient(135deg, rgba(13, 110, 253, 0.05), rgba(13, 110, 253, 0.02));
+    transform: translateX(5px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    border-color: rgba(13, 110, 253, 0.2);
+}
+
+.permission-users-list li:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+}
+
+.permission-users-list li img {
+    border: 2px solid #ffffff;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    transition: all 0.2s ease;
+}
+
+.permission-users-list li:hover img {
+    transform: scale(1.1);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+/* Badges de rol en tooltip */
+.permission-tooltip .user-role-badge {
+    font-size: 0.7rem;
+    padding: 0.25rem 0.5rem;
+    border-radius: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-left: 0.5rem;
+    display: inline-flex;
+    align-items: center;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+    transition: all 0.2s ease;
+}
+
+.permission-tooltip .user-role-badge.owner-badge {
+    background: linear-gradient(135deg, #198754, #20c997);
+    color: #ffffff;
+    border: 1px solid rgba(25, 135, 84, 0.3);
+}
+
+.permission-tooltip .user-role-badge.admin-badge {
+    background: linear-gradient(135deg, #0d6efd, #6610f2);
+    color: #ffffff;
+    border: 1px solid rgba(13, 110, 253, 0.3);
+}
+
+.permission-tooltip .user-role-badge.editor-badge {
+    background: linear-gradient(135deg, #ffc107, #fd7e14);
+    color: #000000;
+    border: 1px solid rgba(255, 193, 7, 0.3);
+}
+
+.permission-tooltip .user-role-badge:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+}
+
+/* Estilos de compatibilidad para badges antiguos */
+.permission-tooltip .owner-badge:not(.user-role-badge) {
+    background-color: rgba(25, 135, 84, 0.15);
+    color: #198754;
+    font-weight: 600;
+}
+
+.permission-tooltip .admin-badge:not(.user-role-badge) {
+    background-color: rgba(13, 110, 253, 0.15);
+    color: #0d6efd;
+    font-weight: 600;
+}
+
+.permission-tooltip .editor-badge:not(.user-role-badge) {
+    background-color: rgba(255, 193, 7, 0.15);
+    color: #b28203;
+    font-weight: 600;
+}
+
+/* Tooltip específico para editores individuales */
+.editor-tooltip {
+    max-width: 580px !important; /* Aumentado de 550px para mostrar información completa */
+    font-size: 0.95rem; /* Aumentado de 0.9rem para mejor legibilidad */
+    opacity: 1 !important;
+    pointer-events: none !important; /* Corregido de auto a none para evitar problemas */
+    z-index: 10000 !important; /* Aumentado para estar por encima de permission-tooltip */
+    position: fixed !important; /* Añadido para consistencia con permission-tooltip */
+}
+
+.editor-tooltip .tooltip-inner {
+    padding: 1.5rem; /* Aumentado para más espacio y mejor legibilidad */
+    max-height: 500px; /* Aumentado para mostrar más contenido */
+    overflow: hidden; /* Añadido para evitar scroll */
+    word-wrap: break-word; /* Añadido para mejor manejo de texto */
+    background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+    color: #212529;
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.12), 0 6px 12px rgba(0, 0, 0, 0.08);
+    border-radius: 10px;
+    text-align: left;
+    position: relative;
+}
+
+[data-bs-theme="dark"] .editor-tooltip .tooltip-inner {
+    background: linear-gradient(135deg, #2d3748 0%, #4a5568 100%);
+    color: #e2e8f0;
+    border-color: rgba(255, 255, 255, 0.1);
+}
+
+.editor-tooltip .tooltip-inner::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, #198754, #0d6efd, #ffc107);
+    border-radius: 10px 10px 0 0;
+}
+
+.editor-tooltip .tooltip-arrow::before {
+    border-top-color: #ffffff !important;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+}
+
+[data-bs-theme="dark"] .editor-tooltip .tooltip-arrow::before {
+    border-top-color: #2d3748 !important;
+}
+
+.editor-tooltip-header {
+    font-weight: 600;
+    margin-bottom: 0.8rem;
+}
+
+.editor-tooltip-header .d-flex {
+    align-items: center;
+    margin-bottom: 0.5rem;
+}
+
+.editor-tooltip-header strong {
+    font-size: 1rem;
+    color: #0d6efd;
+    margin-left: 0.3rem;
+}
+
+[data-bs-theme="dark"] .editor-tooltip-header strong {
+    color: #90cdf4;
+}
+
+.editor-tooltip .user-role-badge {
+    font-size: 0.7rem;
+    padding: 0.2rem 0.4rem;
+    border-radius: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    display: inline-flex;
+    align-items: center;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+    transition: all 0.2s ease;
+}
+
+.editor-tooltip .user-role-badge.owner-badge {
+    background: linear-gradient(135deg, #198754, #20c997);
+    color: #ffffff;
+    border: 1px solid rgba(25, 135, 84, 0.3);
+}
+
+.editor-tooltip .user-role-badge.admin-badge {
+    background: linear-gradient(135deg, #0d6efd, #6610f2);
+    color: #ffffff;
+    border: 1px solid rgba(13, 110, 253, 0.3);
+}
+
+.editor-tooltip .user-role-badge.editor-badge {
+    background: linear-gradient(135deg, #ffc107, #fd7e14);
+    color: #000000;
+    border: 1px solid rgba(255, 193, 7, 0.3);
+}
+
+.editor-tooltip .user-role-badge.user-badge {
+    background: linear-gradient(135deg, #6c757d, #adb5bd);
+    color: #ffffff;
+    border: 1px solid rgba(108, 117, 125, 0.3);
+}
+
+.editor-tooltip .text-muted {
+    font-size: 0.8rem;
+    color: #6c757d !important;
+    display: flex;
+    align-items: center;
+}
+
+[data-bs-theme="dark"] .editor-tooltip .text-muted {
+    color: #a0aec0 !important;
+}
+
+.editor-tooltip .text-muted i {
+    margin-right: 0.4rem;
+    font-size: 0.75rem;
+    opacity: 0.8;
+}
+
+/* Animaciones hover para elementos del tooltip */
+.editor-tooltip .user-role-badge:hover {
+    transform: translateY(-1px) scale(1.05);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+}
+
+/* Estilos para iconos de rol en tooltips */
+.editor-tooltip .fas.fa-crown {
+    color: #198754;
+    text-shadow: 0 1px 2px rgba(25, 135, 84, 0.3);
+}
+
+.editor-tooltip .fas.fa-user-shield {
+    color: #0d6efd;
+    text-shadow: 0 1px 2px rgba(13, 110, 253, 0.3);
+}
+
+.editor-tooltip .fas.fa-user-pen {
+    color: #ffc107;
+    text-shadow: 0 1px 2px rgba(255, 193, 7, 0.3);
+}
+
+.editor-tooltip .fas.fa-user {
+    color: #6c757d;
+    text-shadow: 0 1px 2px rgba(108, 117, 125, 0.3);
+}
+
+/* Responsividad para tooltips de editores */
+@media (max-width: 768px) {
+    .editor-tooltip {
+        max-width: 280px !important;
+        font-size: 0.85rem;
+    }
+    
+    .editor-tooltip .tooltip-inner {
+        padding: 1rem;
+    }
+    
+    .editor-tooltip-header strong {
+        font-size: 0.9rem;
+    }
+    
+    .editor-tooltip .user-role-badge {
+        font-size: 0.65rem;
+        padding: 0.15rem 0.3rem;
+    }
+}
+
+/* --- Mejoras adicionales de responsividad para tooltips de badges --- */
+
+/* Responsividad mejorada para tooltips de permisos (permission-tooltip) */
+@media (max-width: 768px) {
+    .permission-tooltip {
+        max-width: 340px !important; /* Ajustado para móviles */
+        font-size: 0.85rem;
+    }
+    
+    .permission-tooltip .tooltip-inner {
+        padding: 1.2rem; /* Reducido en móviles */
+        max-height: 280px; /* Ajustado para pantallas pequeñas */
+    }
+    
+    .permission-tooltip-header {
+        font-size: 0.9rem;
+        margin-bottom: 0.8rem;
+        padding-bottom: 0.8rem;
+    }
+    
+    .permission-tooltip-count {
+        font-size: 0.75rem;
+        padding: 0.3rem 0.6rem;
+    }
+    
+    .permission-users-list {
+        max-height: 150px; /* Reducido para móviles */
+        font-size: 0.8rem;
+    }
+    
+    .permission-users-list li {
+        padding: 0.5rem 0.3rem;
+        margin-bottom: 0.4rem;
+    }
+}
+
+/* Responsividad adicional para pantallas muy pequeñas */
+@media (max-width: 576px) {
+    .permission-tooltip {
+        max-width: 300px !important;
+        font-size: 0.8rem;
+    }
+    
+    .permission-tooltip .tooltip-inner {
+        padding: 1rem;
+        max-height: 250px;
+    }
+    
+    .editor-tooltip {
+        max-width: 280px !important;
+        font-size: 0.8rem;
+    }
+    
+    .editor-tooltip .tooltip-inner {
+        padding: 0.8rem;
+        max-height: 220px;
+    }
+}
+
+/* Modal de gestión de permisos */
+#managePermissionsModal .alert {
+    border-radius: 0.5rem;
+    overflow: hidden;
+}
+
+#managePermissionsModal .badge {
+    font-weight: normal;
+    letter-spacing: 0.5px;
+}
+
+/* Mejoras para el modal de gestión de permisos */
+#managePermissionsModal .modal-header {
+    background: linear-gradient(135deg, #0d6efd, #0a58ca);
+    padding: 1.25rem 1.5rem;
+}
+
+#managePermissionsModal .modal-dialog {
+    max-width: 800px;
+}
+
+#managePermissionsModal .modal-content {
+    border-radius: 15px;
+}
+
+/* Efectos para los filtros y buscador */
+#managePermissionsModal .input-group {
+    transition: all 0.3s ease;
+    border-radius: 50px;
+    overflow: hidden;
+}
+
+#managePermissionsModal .input-group:focus-within {
+    box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.25);
+}
+
+#managePermissionsModal .form-control {
+    border-radius: 0 50px 50px 0;
+    font-size: 0.95rem;
+    padding-left: 0;
+}
+
+#managePermissionsModal .input-group-text {
+    border-radius: 50px 0 0 50px;
+    padding-left: 1.25rem;
+}
+
+/* Animación para usuarios seleccionados */
+#managePermissionsModal .card.border-success {
+    animation: pulseCard 1s ease;
+}
+
+@keyframes pulseCard {
+    0% { box-shadow: 0 0 0 0 rgba(25, 135, 84, 0.4); }
+    70% { box-shadow: 0 0 0 10px rgba(25, 135, 84, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(25, 135, 84, 0); }
+}
+
+/* Mensajes de feedback en el modal */
+.rbac-feedback-message {
+    position: absolute;
+    bottom: 20px;
+    right: 20px;
+    background: #fff;
+    border-radius: 10px;
+    padding: 0.75rem 1.25rem;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    opacity: 0;
+    transform: translateY(10px);
+    transition: all 0.3s ease;
+    z-index: 100;
+    max-width: 300px;
+}
+
+.rbac-feedback-message.show {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.rbac-feedback-message i {
+    font-size: 1.1rem;
+}
+
+.rbac-feedback-success {
+    border-left: 4px solid #198754;
+}
+
+.rbac-feedback-success i {
+    color: #198754;
+}
+
+.rbac-feedback-error {
+    border-left: 4px solid #dc3545;
+}
+
+.rbac-feedback-error i {
+    color: #dc3545;
+}
+
+/* Animación para badges con permisos activos */
+.permission-badge-glow {
+    animation: pulseBadge 2s infinite;
+    position: relative;
+    overflow: hidden;
+}
+
+.permission-badge-glow::after {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: linear-gradient(
+        to right, 
+        rgba(255, 255, 255, 0) 0%, 
+        rgba(255, 255, 255, 0.3) 50%, 
+        rgba(255, 255, 255, 0) 100%
+    );
+    transform: rotate(30deg);
+    animation: shineEffect 3s infinite;
+    z-index: 1;
+    pointer-events: none;
+}
+
+@keyframes pulseBadge {
+    0% { box-shadow: 0 0 0 0 rgba(25, 135, 84, 0.6); }
+    70% { box-shadow: 0 0 0 6px rgba(25, 135, 84, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(25, 135, 84, 0); }
+}
+
+@keyframes shineEffect {
+    0% { left: -100%; }
+    20% { left: 100%; }
+    100% { left: 100%; }
+}
+
+/* Tarjetas de usuario en modal de permisos */
+#permissionsEditorsList .card {
+    transition: all 0.3s ease;
+    border-radius: 14px;
+    overflow: hidden;
+    position: relative;
+    border-width: 1px;
+}
+
+#permissionsEditorsList .card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(to right, rgba(13, 110, 253, 0.3), rgba(25, 135, 84, 0.3));
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+#permissionsEditorsList .card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 18px rgba(0, 0, 0, 0.12) !important;
+}
+
+#permissionsEditorsList .card:hover::before {
+    opacity: 1;
+}
+
+#permissionsEditorsList .card.border-success {
+    border-width: 2px !important;
+    position: relative;
+    z-index: 1;
+}
+
+#permissionsEditorsList .card.border-success::before {
+    background: #198754;
+    opacity: 1;
+}
+
+#permissionsEditorsList .card-body {
+    padding: 1.25rem 1.5rem;
+}
+
+#permissionsEditorsList .form-check-input {
+    width: 1.25em;
+    height: 1.25em;
+    margin-top: 0.25em;
+    margin-right: 0.6rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border-width: 2px;
+}
+
+#permissionsEditorsList .form-check-input:checked {
+    background-color: #198754;
+    border-color: #198754;
+    box-shadow: 0 0 0 0.15rem rgba(25, 135, 84, 0.25);
+}
+
+#permissionsEditorsList .form-check-input:focus {
+    box-shadow: 0 0 0 0.15rem rgba(25, 135, 84, 0.25);
+}
+
+#permissionsEditorsList .editor-username {
+    font-weight: 700;
+    font-size: 1.05rem;
+    transition: color 0.2s ease;
+}
+
+#permissionsEditorsList .card:hover .editor-username {
+    color: #0d6efd;
+}
+
+#permissionsEditorsList .editor-role {
+    font-size: 0.87rem;
+    opacity: 0.8;
+    display: inline-flex;
+    align-items: center;
+    margin-top: 0.25rem;
+}
+
+#permissionsEditorsList .editor-role i {
+    margin-right: 0.35rem;
+    opacity: 0.8;
+}
+
+/* Indicador de status en las tarjetas */
+.permission-status {
+    position: absolute;
+    top: 0.6rem;
+    right: 0.6rem;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 600;
+    padding: 0.25rem 0.5rem;
+    border-radius: 20px;
+    opacity: 0;
+    transform: translateY(-5px);
+    transition: all 0.3s ease;
+}
+
+.permission-status.status-added {
+    background-color: rgba(25, 135, 84, 0.15);
+    color: #198754;
+}
+
+.permission-status.status-removed {
+    background-color: rgba(220, 53, 69, 0.15);
+    color: #dc3545;
+}
+
+#permissionsEditorsList .card.showing-status .permission-status {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* Estilo para el badge de conteo de usuarios con acceso */
+#editorsSelectedCount {
+    transition: all 0.3s ease;
+    font-weight: 500;
+    letter-spacing: 0.5px;
+}
+
+#editorsSelectedCount.bg-success {
+    animation: fadeInBgSuccess 0.5s ease-in-out;
+    box-shadow: 0 4px 8px rgba(25, 135, 84, 0.2);
+}
+
+/* Animación de entrada para las tarjetas de usuarios */
+.editor-item .card {
+    animation: slideInUp 0.4s ease forwards;
+}
+
+@keyframes slideInUp {
+    from {
+        opacity: 0;
+        transform: translateY(15px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes fadeInBgSuccess {
+    from { background-color: #6c757d; }
+    to { background-color: #198754; }
+}
+
+/* Notificaciones para permisos RBAC */
+#rbacPermissionToast {
+    min-width: 360px;
+    border-radius: 12px;
+    overflow: hidden;
+    border: none;
+    box-shadow: 0 0.75rem 1.5rem rgba(0, 0, 0, 0.18);
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+#rbacPermissionToast::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 4px;
+    height: 100%;
+    background-color: #0d6efd;
+    transition: background-color 0.3s ease;
+}
+
+#rbacPermissionToast.rbac-toast-success::before {
+    background-color: #198754;
+}
+
+#rbacPermissionToast.rbac-toast-warning::before {
+    background-color: #ffc107;
+}
+
+#rbacPermissionToast.rbac-toast-error::before {
+    background-color: #dc3545;
+}
+
+#rbacPermissionToast .toast-header {
+    background-color: #f8f9fa;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    padding: 0.85rem 1.25rem;
+    display: flex;
+    align-items: center;
+}
+
+#rbacPermissionToast .toast-header i {
+    font-size: 1.1rem;
+    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.15));
+}
+
+#rbacPermissionToast .toast-header .me-auto {
+    font-weight: 600;
+    letter-spacing: 0.2px;
+}
+
+#rbacPermissionToast .toast-body {
+    padding: 1.15rem 1.25rem;
+    max-height: 350px;
+    overflow-y: auto;
+    background-color: #fff;
+    border-radius: 0 0 12px 12px;
+    font-size: 0.95rem;
+    line-height: 1.6;
+}
+
+/* Variantes de toast para permisos */
+.rbac-toast-success .toast-header {
+    background-color: rgba(25, 135, 84, 0.1);
+    color: #198754;
+}
+
+.rbac-toast-success .toast-header i {
+    color: #198754;
+}
+
+.rbac-toast-warning .toast-header {
+    background-color: rgba(255, 193, 7, 0.1);
+    color: #856404;
+}
+
+.rbac-toast-warning .toast-header i {
+    color: #856404;
+}
+
+.rbac-toast-error .toast-header {
+    background-color: rgba(220, 53, 69, 0.1);
+    color: #dc3545;
+}
+
+.rbac-toast-error .toast-header i {
+    color: #dc3545;
+}
+
+/* Estilos para íconos de acciones en toast */
+.rbac-toast-action {
+    padding: 0.35rem 0.85rem;
+    border-radius: 50px;
+    margin: 0.35rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    display: inline-flex;
+    align-items: center;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    background-color: #fff;
+    color: #495057;
+}
+
+.rbac-toast-action:hover {
+    background-color: #f8f9fa;
+    transform: translateY(-2px);
+    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.12);
+    color: #0d6efd;
+}
+
+.rbac-toast-action:active {
+    transform: translateY(0);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.rbac-toast-action i {
+    margin-right: 0.5rem;
+    transition: all 0.25s ease;
+}
+
+.rbac-toast-action:hover i {
+    transform: scale(1.1);
+}
+
+.rbac-toast-action.primary {
+    background-color: rgba(13, 110, 253, 0.1);
+    color: #0d6efd;
+    border-color: rgba(13, 110, 253, 0.2);
+}
+
+.rbac-toast-action.primary:hover {
+    background-color: rgba(13, 110, 253, 0.15);
+}
+
+.rbac-toast-action.success {
+    background-color: rgba(25, 135, 84, 0.1);
+    color: #198754;
+    border-color: rgba(25, 135, 84, 0.2);
+}
+
+.rbac-toast-action.success:hover {
+    background-color: rgba(25, 135, 84, 0.15);
+}
+
+/* Animaciones para toasts de feedback */
+.rbac-toast-success {
+    animation: slideInRight 0.4s ease-out;
+}
+
+.rbac-toast-error {
+    animation: shakeToast 0.5s ease-in-out;
+}
+
+.rbac-toast-warning {
+    animation: bounceIn 0.5s ease;
+}
+
+@keyframes slideInRight {
+    from { 
+        transform: translateX(100%); 
+        opacity: 0; 
+    }
+    to { 
+        transform: translateX(0); 
+        opacity: 1; 
+    }
+}
+
+@keyframes shakeToast {
+    0%, 100% { transform: translateX(0); }
+    10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+    20%, 40%, 60%, 80% { transform: translateX(5px); }
+}
+
+@keyframes bounceIn {
+    0% { 
+        transform: scale(0.8); 
+        opacity: 0; 
+    }
+    20% {
+        transform: scale(1.05);
+    }
+    40% {
+        transform: scale(0.95);
+    }
+    60% {
+        transform: scale(1.02);
+        opacity: 1;
+    }
+    80% {
+        transform: scale(0.98);
+    }
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+/* Spinner para operaciones de permisos */
+.rbac-spinner {
+    width: 1.2rem;
+    height: 1.2rem;
+    border-width: 0.15rem;
+    animation: spinWithPulse 1.2s linear infinite;
+}
+
+.rbac-spinner-container {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.25rem;
+    border-radius: 50%;
+    background-color: rgba(255, 255, 255, 0.9);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+@keyframes spinWithPulse {
+    0% {
+        transform: rotate(0deg);
+        border-top-color: rgba(13, 110, 253, 0.6);
+    }
+    50% {
+        transform: rotate(180deg);
+        border-top-color: #0d6efd;
+    }
+    100% {
+        transform: rotate(360deg);
+        border-top-color: rgba(13, 110, 253, 0.6);
+    }
+}
+
+/* Indicadores de estado para permisos */
+.permission-state-indicator {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-left: 0.5rem;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    font-size: 0.7rem;
+    color: white;
+    transition: all 0.3s ease;
+}
+
+.permission-state-active {
+    background-color: #198754;
+    box-shadow: 0 0 0 2px rgba(25, 135, 84, 0.2);
+}
+
+.permission-state-inactive {
+    background-color: #6c757d;
+    box-shadow: 0 0 0 2px rgba(108, 117, 125, 0.2);
+}
+
+.permission-state-pending {
+    background-color: #ffc107;
+    box-shadow: 0 0 0 2px rgba(255, 193, 7, 0.2);
+    animation: pulsePending 2s infinite;
+}
+
+@keyframes pulsePending {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+    100% { transform: scale(1); }
+}
+
+/* Efectos de transición para acciones de permisos */
+.permission-action-transition {
+    transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.permission-granted {
+    animation: scaleInFadeGreen 0.5s forwards;
+}
+
+.permission-revoked {
+    animation: fadeOutRed 0.5s forwards;
+}
+
+@keyframes scaleInFadeGreen {
+    0% { 
+        transform: scale(0.9);
+        opacity: 0;
+        background-color: transparent;
+    }
+    50% {
+        background-color: rgba(25, 135, 84, 0.15);
+    }
+    100% { 
+        transform: scale(1);
+        opacity: 1;
+        background-color: transparent;
+    }
+}
+
+@keyframes fadeOutRed {
+    0% { 
+        background-color: rgba(220, 53, 69, 0.15);
+        opacity: 1;
+    }
+    100% { 
+        background-color: transparent;
+        opacity: 0.7;
+    }
+}
+
+/* Mejoras de accesibilidad para interacciones */
+.permission-interactive-element {
+    position: relative;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    outline: none;
+}
+
+.permission-interactive-element:focus-visible {
+    outline: 2px solid #0d6efd;
+    outline-offset: 2px;
+}
+
+.permission-interactive-element:hover::before {
+    content: attr(data-tooltip);
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%) translateY(-5px);
+    background-color: #212529;
+    color: white;
+    font-size: 0.75rem;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: all 0.2s ease;
+}
+
+.permission-interactive-element:hover::before {
+    opacity: 0.9;
+    transform: translateX(-50%) translateY(-10px);
+}
+
+/* Iconos de status para tarjetas de usuarios */
+.user-status-icon {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.8rem;
+    margin-right: 0.75rem;
+    flex-shrink: 0;
+    transition: all 0.3s ease;
+}
+
+.status-icon-editor {
+    background-color: rgba(255, 193, 7, 0.15);
+    color: #b28203;
+}
+
+.status-icon-admin {
+    background-color: rgba(13, 110, 253, 0.15);
+    color: #0d6efd;
+}
+
+.status-icon-owner {
+    background-color: rgba(25, 135, 84, 0.15);
+    color: #198754;
+}
+
+/* Mejoras para contadores de selección */
+#editorsSelectedCount {
+    padding: 0.4rem 0.75rem;
+    border-radius: 50px;
+    display: inline-flex;
+    align-items: center;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+#editorsSelectedCount .number {
+    margin: 0 0.35rem;
+    position: relative;
+}
+
+#editorsSelectedCount.has-selected {
+    animation: pulseGrow 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes pulseGrow {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.15); }
+    100% { transform: scale(1); }
+}
+
+/* --- Mejoras específicas para tooltips de editores (columna 8) --- */
+
+/* Configuración base del tooltip para evitar scroll */
+.editor-tooltip {
+    max-width: 320px !important;
+    font-size: 0.9rem;
+    opacity: 1 !important;
+    pointer-events: none !important; /* Evitar interacciones que causen scroll */
+    z-index: 10000 !important;
+    position: fixed !important; /* Posición fija para evitar problemas de scroll */
+}
+
+/* Contenido interno del tooltip */
+.editor-tooltip .tooltip-inner {
+    padding: 1rem 1.2rem;
+    max-height: 300px; /* Limitar altura para evitar scroll */
+    overflow: hidden; /* Añadido para evitar scroll */
+    text-overflow: ellipsis;
+    word-wrap: break-word;
+    border-radius: 12px;
+    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.15), 0 2px 8px rgba(0, 0, 0, 0.08);
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    position: relative;
+    text-align: left;
+    background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+    color: #212529;
+}
+
+/* Modo oscuro - usando data-bs-theme */
+[data-bs-theme="dark"] .editor-tooltip .tooltip-inner {
+    background: linear-gradient(135deg, #1a202c 0%, #2d3748 100%);
+    color: #e2e8f0;
+    border-color: rgba(255, 255, 255, 0.1);
+    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.4), 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+/* Flecha del tooltip - modo claro */
+.editor-tooltip .tooltip-arrow::before {
+    border-top-color: #ffffff !important;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+}
+
+/* Flecha del tooltip - modo oscuro */
+[data-bs-theme="dark"] .editor-tooltip .tooltip-arrow::before {
+    border-top-color: #1a202c !important;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+}
+
+/* Header del tooltip */
+.editor-tooltip-header {
+    font-weight: 600;
+    margin-bottom: 0.6rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+[data-bs-theme="dark"] .editor-tooltip-header {
+    border-bottom-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Nombre del usuario en el tooltip */
+.editor-tooltip-header strong {
+    font-size: 1rem;
+    color: #0d6efd;
+    margin-left: 0.3rem;
+}
+
+[data-bs-theme="dark"] .editor-tooltip-header strong {
+    color: #90cdf4;
+}
+
+/* Badges de rol mejorados */
+.editor-tooltip .user-role-badge {
+    font-size: 0.7rem;
+    padding: 0.25rem 0.5rem;
+    border-radius: 8px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    display: inline-flex;
+    align-items: center;
+    margin-left: 0.5rem;
+    transition: all 0.2s ease;
+}
+
+/* Colores específicos para cada rol */
+.editor-tooltip .user-role-badge.owner-badge {
+    background: linear-gradient(135deg, #198754, #20c997);
+    color: #ffffff;
+    box-shadow: 0 2px 4px rgba(25, 135, 84, 0.3);
+}
+
+.editor-tooltip .user-role-badge.admin-badge {
+    background: linear-gradient(135deg, #0d6efd, #6610f2);
+    color: #ffffff;
+    box-shadow: 0 2px 4px rgba(13, 110, 253, 0.3);
+}
+
+.editor-tooltip .user-role-badge.editor-badge {
+    background: linear-gradient(135deg, #ffc107, #fd7e14);
+    color: #000000;
+    box-shadow: 0 2px 4px rgba(255, 193, 7, 0.3);
+}
+
+.editor-tooltip .user-role-badge.user-badge {
+    background: linear-gradient(135deg, #6c757d, #adb5bd);
+    color: #ffffff;
+    box-shadow: 0 2px 4px rgba(108, 117, 125, 0.3);
+}
+
+/* Texto muted en tooltips */
+.editor-tooltip .text-muted {
+    font-size: 0.8rem;
+    display: flex;
+    align-items: center;
+    margin-top: 0.4rem;
+    color: #6c757d !important;
+}
+
+[data-bs-theme="dark"] .editor-tooltip .text-muted {
+    color: #a0aec0 !important;
+}
+
+/* Iconos en tooltips */
+.editor-tooltip .text-muted i {
+    margin-right: 0.4rem;
+    font-size: 0.75rem;
+    opacity: 0.8;
+}
+
+/* Iconos de rol específicos */
+.editor-tooltip .fas.fa-crown {
+    color: #198754;
+    text-shadow: 0 1px 2px rgba(25, 135, 84, 0.3);
+}
+
+.editor-tooltip .fas.fa-user-shield {
+    color: #0d6efd;
+    text-shadow: 0 1px 2px rgba(13, 110, 253, 0.3);
+}
+
+.editor-tooltip .fas.fa-user-pen {
+    color: #ffc107;
+    text-shadow: 0 1px 2px rgba(255, 193, 7, 0.3);
+}
+
+/* Responsividad para tooltips */
+@media (max-width: 768px) {
+    .editor-tooltip {
+        max-width: 260px !important;
+        font-size: 0.85rem;
+    }
+    
+    .editor-tooltip .tooltip-inner {
+        padding: 0.8rem;
+        max-height: 250px;
+    }
+    
+    .editor-tooltip-header strong {
+        font-size: 0.9rem;
+    }
+    
+    .editor-tooltip .user-role-badge {
+        font-size: 0.65rem;
+        padding: 0.2rem 0.4rem;
+    }
+}
+
+/* --- FIXES CRÍTICOS para Imágenes de Perfil (img.rounded-circle) en Tooltips --- */
+
+/* Fix super específico para elementos IMG con rounded-circle en tooltips */
+.permission-tooltip img.rounded-circle,
+.editor-tooltip img.rounded-circle {
+    width: 32px !important;
+    height: 32px !important;
+    min-width: 32px !important;
+    min-height: 32px !important;
+    max-width: 32px !important;
+    max-height: 32px !important;
+    aspect-ratio: 1 / 1 !important;
+    border-radius: 50% !important;
+    object-fit: cover !important;
+    object-position: center !important;
+    flex-shrink: 0 !important;
+    box-sizing: border-box !important;
+    display: inline-block !important;
+}
+
+/* Variantes de tamaño para imágenes en tooltips */
+.permission-tooltip img.rounded-circle[style*="width:24px"],
+.editor-tooltip img.rounded-circle[style*="width:24px"] {
+    width: 24px !important;
+    height: 24px !important;
+    min-width: 24px !important;
+    min-height: 24px !important;
+    max-width: 24px !important;
+    max-height: 24px !important;
+}
+
+.permission-tooltip img.rounded-circle[style*="width:30px"],
+.editor-tooltip img.rounded-circle[style*="width:30px"] {
+    width: 30px !important;
+    height: 30px !important;
+    min-width: 30px !important;
+    min-height: 30px !important;
+    max-width: 30px !important;
+    max-height: 30px !important;
+}
+
+.permission-tooltip img.rounded-circle[style*="width:32px"],
+.editor-tooltip img.rounded-circle[style*="width:32px"] {
+    width: 32px !important;
+    height: 32px !important;
+    min-width: 32px !important;
+    min-height: 32px !important;
+    max-width: 32px !important;
+    max-height: 32px !important;
+}
+
+.permission-tooltip img.rounded-circle[style*="width:35px"],
+.editor-tooltip img.rounded-circle[style*="width:35px"] {
+    width: 35px !important;
+    height: 35px !important;
+    min-width: 35px !important;
+    min-height: 35px !important;
+    max-width: 35px !important;
+    max-height: 35px !important;
+}
+
+/* Mejoras visuales para imágenes en tooltips */
+.permission-tooltip img.rounded-circle,
+.editor-tooltip img.rounded-circle {
+    border: 2px solid #ffffff !important;
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15), 
+                0 1px 3px rgba(0, 0, 0, 0.1) !important;
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important;
+    position: relative;
+    overflow: hidden;
+}
+
+/* Efectos hover para imágenes en tooltips */
+.permission-tooltip img.rounded-circle:hover,
+.editor-tooltip img.rounded-circle:hover {
+    transform: scale(1.08) translateY(-1px) !important;
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2), 
+                0 2px 6px rgba(0, 0, 0, 0.15) !important;
+    border-color: rgba(13, 110, 253, 0.4) !important;
+}
+
+/* Modo oscuro para imágenes en tooltips */
+[data-bs-theme="dark"] .permission-tooltip img.rounded-circle,
+[data-bs-theme="dark"] .editor-tooltip img.rounded-circle {
+    border-color: rgba(255, 255, 255, 0.2) !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4), 
+                0 2px 6px rgba(0, 0, 0, 0.3) !important;
+}
+
+[data-bs-theme="dark"] .permission-tooltip img.rounded-circle:hover,
+[data-bs-theme="dark"] .editor-tooltip img.rounded-circle:hover {
+    border-color: rgba(255, 255, 255, 0.4) !important;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5), 
+                0 4px 12px rgba(0, 0, 0, 0.4) !important;
+}
+
+/* Fix agresivo para cualquier imagen dentro de tooltips */
+.permission-tooltip .permission-users-list img.rounded-circle,
+.editor-tooltip .editor-tooltip-header img.rounded-circle {
+    width: 24px !important;
+    height: 24px !important;
+    aspect-ratio: 1 / 1 !important;
+    border-radius: 50% !important;
+    object-fit: cover !important;
+    object-position: center center !important;
+}
+
+/* --- ULTRA-SPECIFIC FIXES para Imágenes de Perfil (AGRESIVO) --- */
+
+/* Fix ultra agresivo con selectores más específicos para override de estilos inline */
+.permission-tooltip img[src].rounded-circle,
+.editor-tooltip img[src].rounded-circle,
+.permission-tooltip img.rounded-circle[src],
+.editor-tooltip img.rounded-circle[src],
+.tooltip-inner img.rounded-circle,
+.tooltip img.rounded-circle,
+[data-bs-original-title] img.rounded-circle {
+    width: 32px !important;
+    height: 32px !important;
+    min-width: 32px !important;
+    min-height: 32px !important;
+    max-width: 32px !important;
+    max-height: 32px !important;
+    aspect-ratio: 1 / 1 !important;
+    border-radius: 50% !important;
+    object-fit: cover !important;
+    object-position: center center !important;
+    flex-shrink: 0 !important;
+    flex-grow: 0 !important;
+    box-sizing: border-box !important;
+    display: inline-block !important;
+    vertical-align: middle !important;
+    line-height: 1 !important;
+    overflow: hidden !important;
+}
+
+/* Fix específico para imágenes dentro de listas de usuarios en tooltips */
+.permission-tooltip .permission-users-list img[src].rounded-circle,
+.editor-tooltip .editor-tooltip-header img[src].rounded-circle,
+.tooltip-inner .permission-users-list img.rounded-circle,
+.tooltip-inner .editor-tooltip-header img.rounded-circle {
+    width: 24px !important;
+    height: 24px !important;
+    min-width: 24px !important;
+    min-height: 24px !important;
+    max-width: 24px !important;
+    max-height: 24px !important;
+    aspect-ratio: 1 / 1 !important;
+    border-radius: 50% !important;
+    object-fit: cover !important;
+    object-position: center center !important;
+    margin-right: 0.5rem !important;
+}
+
+/* Override para cualquier estilo inline específico */
+.permission-tooltip img.rounded-circle[style],
+.editor-tooltip img.rounded-circle[style],
+.tooltip-inner img.rounded-circle[style] {
+    width: 32px !important;
+    height: 32px !important;
+    border-radius: 50% !important;
+    object-fit: cover !important;
+    aspect-ratio: 1 / 1 !important;
+}
+
+/* Fix para contenedores que puedan estar deformando las imágenes */
+.permission-tooltip .d-flex,
+.permission-tooltip .align-items-center,
+.editor-tooltip .d-flex,
+.editor-tooltip .align-items-center {
+    align-items: center !important;
+    justify-content: flex-start !important;
+}
+
+.permission-tooltip .d-flex img.rounded-circle,
+.editor-tooltip .d-flex img.rounded-circle {
+    flex-shrink: 0 !important;
+    flex-grow: 0 !important;
+    align-self: center !important;
+}
+
+/* Corrección para elementos contenedores que puedan afectar las imágenes */
+.permission-tooltip .permission-users-list .d-flex,
+.editor-tooltip .editor-tooltip-header .d-flex {
+    display: flex !important;
+    align-items: center !important;
+    flex-wrap: nowrap !important;
+}
+
+/* Fix específico para tamaños variables con estilos inline */
+.permission-tooltip img.rounded-circle[style*="width"][style*="height"],
+.editor-tooltip img.rounded-circle[style*="width"][style*="height"],
+.tooltip-inner img.rounded-circle[style*="width"][style*="height"] {
+    aspect-ratio: 1 / 1 !important;
+    border-radius: 50% !important;
+    object-fit: cover !important;
+    object-position: center center !important;
+    box-sizing: border-box !important;
+}
+
+/* Corrección para cualquier imagen dentro de tooltips Bootstrap */
+.tooltip .tooltip-inner img.rounded-circle,
+.bs-tooltip-top .tooltip-inner img.rounded-circle,
+.bs-tooltip-bottom .tooltip-inner img.rounded-circle,
+.bs-tooltip-start .tooltip-inner img.rounded-circle,
+.bs-tooltip-end .tooltip-inner img.rounded-circle {
+    width: 32px !important;
+    height: 32px !important;
+    aspect-ratio: 1 / 1 !important;
+    border-radius: 50% !important;
+    object-fit: cover !important;
+    object-position: center center !important;
+    display: inline-block !important;
+    vertical-align: middle !important;
+}
+
+/* Última línea de defensa - selector universal para imágenes redondas en tooltips */
+[class*="tooltip"] img[class*="rounded-circle"],
+[data-bs-original-title] img[class*="rounded-circle"] {
+    aspect-ratio: 1 / 1 !important;
+    border-radius: 50% !important;
+    object-fit: cover !important;
+    object-position: center !important;
+}
+
+/* --- Fin de ULTRA-SPECIFIC FIXES --- */
