@@ -1,0 +1,134 @@
+---- 2025-06-02 22:19:01 ----
+_POST:
+Array
+(
+    [formId] => 
+    [formTitle] => Becas Hadime Raíces 2025
+    [formDescription] => Solicitud de Becas Hadime Raíces - Un Estudio Socio Economico.
+Para ayudarnos en discernir bien, les pedimos que nos contestan estas preguntas con mucha honestidad.  Si tienes mas preguntas o mas comentarios sobre alguna pregunta, por favor de avisarnos y pedir un tiempo para compartir sobre su situación particular.  Al llenar ese formulario no es un hecho que recibirás una beca.  Estas decisiones serian tomadas con discernimiento y oración por los encargados de Hadime.  Las becas son normalmente dadas en 10%, 25%, o 50% de la totalidad del costo del programa.  Costos de transporte siempre corren a la cuenta de cada participante.
+    [companyName] => Centro de Entrenamiento Mateo
+    [logoUrl] => http://prueba.centromateo.org/wp-content/uploads/2022/10/Copia-de-logo.png
+    [expirationDate] => 2025-06-23
+    [area_id] => 682c2695244f3
+    [fields] => Array
+        (
+            [field_text_1] => Array
+                (
+                    [label] => Nombre Completo
+                    [type] => text
+                    [placeholder] => Tu Nombre
+                    [required] => 1
+                )
+
+            [field_email_14] => Array
+                (
+                    [label] => Correo Electrónico
+                    [type] => email
+                    [placeholder] => ejemplo@correo.com
+                    [required] => 1
+                )
+
+            [field_text_2] => Array
+                (
+                    [label] => Domicilio
+                    [type] => text
+                    [placeholder] => Tu Respuesta
+                    [required] => 1
+                )
+
+            [field_text_3] => Array
+                (
+                    [label] => La vivienda donde vive tu familia
+                    [type] => text
+                    [placeholder] => ¿Es propia, rentada, prestada, o que situación tiene?
+                    [required] => 1
+                )
+
+            [field_text_4] => Array
+                (
+                    [label] => ¿Cuantas personas viven normalmente en esta vivienda?
+                    [type] => text
+                    [placeholder] => Incluya a personas de todas las edades y cualquier persona que viva aqui aunque no sea de su familia
+                    [required] => 1
+                )
+
+            [field_textarea_6] => Array
+                (
+                    [label] => ¿Trabajas actualmente?
+                    [type] => textarea
+                    [placeholder] => Si sí, en donde, con que sueldo mensual y horario y desde cuándo?
+                    [required] => 1
+                )
+
+            [field_radio_7] => Array
+                (
+                    [label] => ¿Cuentas con un computadora o laptop?
+                    [type] => radio
+                    [options] => Si
+No
+                    [required] => 1
+                )
+
+            [field_text_8] => Array
+                (
+                    [label] => ¿Que medio de transporte utilizas para ir a la escuela o a tu trabajo?
+                    [type] => text
+                    [placeholder] => Tu Respuesta
+                    [required] => 1
+                )
+
+            [field_radio_9] => Array
+                (
+                    [label] => ¿Tu familia saben de tu deseo de participar en Hadime?
+                    [type] => radio
+                    [options] => Si
+No
+                    [required] => 1
+                )
+
+            [field_number_10] => Array
+                (
+                    [label] => ¿Con cuánto crees que entre tu y tu familia podrían aportar para el programa de Hadime? (en total, aunque se puede pagar mensual)
+                    [type] => number
+                    [placeholder] => En Dolares
+                    [min] => 
+                    [max] => 
+                    [required] => 1
+                )
+
+            [field_radio_11] => Array
+                (
+                    [label] => ¿Tu iglesia local sabe de tu deseo de participar en Hadime?
+                    [type] => radio
+                    [options] => Si
+No
+                    [required] => 1
+                )
+
+            [field_radio_12] => Array
+                (
+                    [label] => Animamos que  todas los participantes de Hadime están de cierta forma con la cobertura de su iglesia local.  Y con eso, también esperamos que su iglesia local puede apoyarte (aun si es una cantidad minima).  ¿Estas dispuesto a comunicarte con tu iglesia local para invitarla que considera apoyarte en el programa de Hadime Raíces?
+                    [type] => radio
+                    [options] => Si
+No
+                    [required] => 1
+                )
+
+            [field_textarea_13] => Array
+                (
+                    [label] => ¿Hay alguna otra información que es importante que sepamos cuando consideramos tu situación economica?
+                    [type] => textarea
+                    [placeholder] => 
+                    [required] => 
+                )
+
+        )
+
+)
+
+_FILES:
+Array
+(
+)
+
+-----------------------------

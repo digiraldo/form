@@ -181,7 +181,7 @@ async function importBackup() {
         progressContainer.style.display = 'block';
         progressBar.style.width = '20%';
         
-        const response = await fetch('api/backup.php', {
+        const response = await fetch('api/backup.php?action=import', {
             method: 'POST',
             body: formData
         });

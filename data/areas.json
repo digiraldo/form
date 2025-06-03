@@ -1,1 +1,93 @@
-[]
+[
+    {
+        "id": "682c2695244f3",
+        "name": "Hadime Raíces",
+        "description": "La experiencia de HADIME es una oportunidad única de separar un tiempo para enfocarte completamente en profundizar tu relación con Dios.",
+        "admins": [
+            "user_c452f2",
+            "user_b72680",
+            "user_96a2b6",
+            "user_1af019"
+        ],
+        "editors": [
+            "user_c649aa"
+        ],
+        "color": "#860223"
+    },
+    {
+        "id": "682c26aeee58a",
+        "name": "Hadime Más",
+        "description": "No es un programa para aquellos que deseen vivir una experiencia de solitud y tranquilidad, es más un tiempo de mucha acción y dedicación, viviendo constantemente en comunidad y aprendiendo a trabajar en equipo.",
+        "admins": [
+            "user_c452f2",
+            "user_b72680",
+            "user_f20b97"
+        ],
+        "editors": [],
+        "color": "#00431e"
+    },
+    {
+        "id": "682c26c5b884b",
+        "name": "Hadime Junior",
+        "description": "Durante HADIME Jr los adolescentes experimentan una variedad de enseñanzas, dinámicas y tiempos de servicio, proveemos un espacio donde pueden conocer a otros jóvenes, divertirse, y crecer en su vida espiritual.",
+        "admins": [
+            "user_c452f2",
+            "user_b72680",
+            "user_f20b97"
+        ],
+        "editors": [],
+        "color": "#f0e600"
+    },
+    {
+        "id": "682c26e52309a",
+        "name": "Hadime Familias",
+        "description": "Aprender, compartir, servir y disfrutar como familia es nuestro objetivo. Un retiro familiar para todos que les permitirá escuchar la voz de Dios y reconocerlo diariamente en sus vidas.",
+        "admins": [
+            "user_c452f2",
+            "user_b72680",
+            "user_2b6711"
+        ],
+        "editors": [],
+        "color": "#002b53"
+    },
+    {
+        "id": "682c271d63a9a",
+        "name": "Hadime Misioneros",
+        "description": "Este programa es una formación integral del candidato misionero, incluye el discipulado personal, cursos académicos sobre misiones, y la experiencia práctica.",
+        "admins": [
+            "user_c452f2",
+            "user_b72680",
+            "user_2b6711"
+        ],
+        "editors": [
+            "user_2d5189"
+        ],
+        "color": "#492613"
+    },
+    {
+        "id": "682c2744b5f8e",
+        "name": "Vive la Misión",
+        "description": "La misión es de todos y todos nos unimos para ser parte de ella, durante este tiempo nos capacitamos y aprendemos a través de la experiencia.",
+        "admins": [
+            "user_c452f2",
+            "user_b72680",
+            "user_2b6711"
+        ],
+        "editors": [],
+        "color": "#474747"
+    },
+    {
+        "id": "682c2763582f0",
+        "name": "CEM Rentas",
+        "description": "Un lugar para tener encuentro con Dios",
+        "admins": [
+            "user_c452f2",
+            "user_b72680",
+            "user_1af019"
+        ],
+        "editors": [
+            "user_928b45"
+        ],
+        "color": "#620952"
+    }
+]

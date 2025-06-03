@@ -30,16 +30,17 @@ function createBackup($backup_dirs, $backup_base_dir, $temp_dir) {
         }
         
         // Función recursiva para agregar archivos al ZIP
-        function addDirectoryToZip($zip, $dir, $base_dir, $prefix = '') {
+        function addDirectoryToZip($zip, $dir, $prefix = '') {
+            $dir = rtrim(str_replace(['\\', '/'], '/', realpath($dir)), '/');
             $files = new RecursiveIteratorIterator(
                 new RecursiveDirectoryIterator($dir, RecursiveDirectoryIterator::SKIP_DOTS),
                 RecursiveIteratorIterator::SELF_FIRST
             );
-            
             foreach ($files as $file) {
-                $file_path = $file->getRealPath();
-                $relative_path = $prefix . substr($file_path, strlen($base_dir));
-                
+                $file_path = str_replace(['\\', '/'], '/', $file->getRealPath());
+                $local_path = ltrim(substr($file_path, strlen($dir)), '/');
+                // Si $local_path está vacío, es el propio directorio raíz
+                $relative_path = $prefix . ($local_path !== '' ? $local_path : basename($dir));
                 if ($file->isDir()) {
                     $zip->addEmptyDir($relative_path);
                 } else {
@@ -65,7 +66,7 @@ function createBackup($backup_dirs, $backup_base_dir, $temp_dir) {
         foreach ($backup_dirs as $dir) {
             $full_dir_path = $backup_base_dir . $dir;
             if (is_dir($full_dir_path)) {
-                addDirectoryToZip($zip, $full_dir_path, $backup_base_dir, '');
+                addDirectoryToZip($zip, $full_dir_path, $dir . '/');
             }
         }
         
@@ -110,60 +111,59 @@ function createBackup($backup_dirs, $backup_base_dir, $temp_dir) {
 // Función para restaurar un backup
 function restoreBackup($uploaded_file, $backup_base_dir, $temp_dir) {
     try {
+        error_log("[restoreBackup] Iniciando restauración de backup: " . $uploaded_file['name']);
         // Verificar que el archivo es un ZIP válido
         $zip = new ZipArchive();
         if ($zip->open($uploaded_file['tmp_name']) !== TRUE) {
+            error_log("[restoreBackup] El archivo no es un ZIP válido");
             throw new Exception('El archivo no es un ZIP válido');
         }
-        
         // Verificar que es un backup válido
         $backup_info_content = $zip->getFromName('backup_info.json');
         if ($backup_info_content === false) {
             $zip->close();
+            error_log("[restoreBackup] No se encontró backup_info.json en el ZIP");
             throw new Exception('El archivo no es un backup válido del sistema');
         }
-        
         $backup_info = json_decode($backup_info_content, true);
         if (!$backup_info || !isset($backup_info['system']) || $backup_info['system'] !== 'Formularios Admin RBAC') {
             $zip->close();
+            error_log("[restoreBackup] El backup no pertenece a este sistema");
             throw new Exception('El backup no pertenece a este sistema');
         }
-        
         // Crear backup temporal del estado actual
         $current_backup = createBackup(['data', 'downloads', 'profile_images', 'uploads'], $backup_base_dir, $temp_dir);
         if (!$current_backup['success']) {
             $zip->close();
+            error_log("[restoreBackup] No se pudo crear backup de seguridad del estado actual");
             throw new Exception('No se pudo crear backup de seguridad del estado actual');
         }
-        
         // Extraer el backup a un directorio temporal
         $extract_dir = $temp_dir . '/backup_restore_' . uniqid();
         if (!mkdir($extract_dir, 0755, true)) {
             $zip->close();
+            error_log("[restoreBackup] No se pudo crear el directorio temporal: $extract_dir");
             throw new Exception('No se pudo crear el directorio temporal');
         }
-        
         if (!$zip->extractTo($extract_dir)) {
             $zip->close();
             rmdir($extract_dir);
+            error_log("[restoreBackup] No se pudo extraer el archivo de backup en: $extract_dir");
             throw new Exception('No se pudo extraer el archivo de backup');
         }
         $zip->close();
-        
+        error_log("[restoreBackup] Backup extraído en: $extract_dir");
         // Función para copiar recursivamente
         function copyDirectory($src, $dst) {
             if (!is_dir($src)) return false;
-            
             if (!is_dir($dst)) {
                 mkdir($dst, 0755, true);
             }
-            
             $dir = opendir($src);
             while (($file = readdir($dir)) !== false) {
                 if ($file != '.' && $file != '..') {
                     $src_file = $src . '/' . $file;
                     $dst_file = $dst . '/' . $file;
-                    
                     if (is_dir($src_file)) {
                         copyDirectory($src_file, $dst_file);
                     } else {
@@ -174,11 +174,9 @@ function restoreBackup($uploaded_file, $backup_base_dir, $temp_dir) {
             closedir($dir);
             return true;
         }
-        
         // Función para eliminar recursivamente
         function removeDirectory($dir) {
             if (!is_dir($dir)) return;
-            
             $files = array_diff(scandir($dir), array('.', '..'));
             foreach ($files as $file) {
                 $file_path = $dir . '/' . $file;
@@ -190,39 +188,40 @@ function restoreBackup($uploaded_file, $backup_base_dir, $temp_dir) {
             }
             rmdir($dir);
         }
-        
         // Restaurar cada directorio
         foreach ($backup_info['directories'] as $dir) {
             $src_dir = $extract_dir . '/' . $dir;
             $dst_dir = $backup_base_dir . $dir;
-            
+            error_log("[restoreBackup] Procesando directorio: $dir");
             if (is_dir($src_dir)) {
                 // Eliminar directorio actual si existe
                 if (is_dir($dst_dir)) {
+                    error_log("[restoreBackup] Eliminando directorio destino: $dst_dir");
                     removeDirectory($dst_dir);
                 }
-                
                 // Copiar desde el backup
+                error_log("[restoreBackup] Copiando de $src_dir a $dst_dir");
                 if (!copyDirectory($src_dir, $dst_dir)) {
+                    error_log("[restoreBackup] No se pudo restaurar el directorio: $dir");
                     throw new Exception("No se pudo restaurar el directorio: $dir");
                 }
+            } else {
+                error_log("[restoreBackup] No existe en el backup: $src_dir");
             }
         }
-        
         // Limpiar directorio temporal
         removeDirectory($extract_dir);
-        
+        error_log("[restoreBackup] Restauración completada correctamente");
         // Registrar la operación
         logBackupOperation('import', $uploaded_file['name'], $uploaded_file['size'], 'success');
-        
         return [
             'success' => true,
             'message' => 'Backup restaurado exitosamente',
             'backup_info' => $backup_info,
             'current_backup' => $current_backup['filename']
         ];
-        
     } catch (Exception $e) {
+        error_log("[restoreBackup] ERROR: " . $e->getMessage());
         logBackupOperation('import', $uploaded_file['name'] ?? 'Unknown', $uploaded_file['size'] ?? 0, 'error', $e->getMessage());
         return [
             'success' => false,

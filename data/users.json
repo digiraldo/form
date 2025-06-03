@@ -1,1 +1,127 @@
-[]
+[
+    {
+        "id": "user_9e62c6",
+        "username": "centromateo",
+        "password": "$2y$10$WpJr9wkH51\/t5vdVVTMrN.iqrR2lqFja49al.ct.WSlst\/hN6LVW.",
+        "role": "owner",
+        "profile_image_filename": "user_9e62c6.png",
+        "created_at": "2025-06-01 06:20:49"
+    },
+    {
+        "id": "user_c452f2",
+        "username": "Didier",
+        "password": "$2y$10$iil6Fr0fbAOFEWtncYRRyOm.JL9gQhB8YEBBGMMFDQHAA0XQX0LmW",
+        "role": "admin",
+        "profile_image_filename": "user_c452f2.jpg",
+        "created_at": "2025-06-02 21:50:23",
+        "areas_admin": [
+            "682c2695244f3",
+            "682c26aeee58a",
+            "682c26c5b884b",
+            "682c26e52309a",
+            "682c271d63a9a",
+            "682c2744b5f8e",
+            "682c2763582f0"
+        ]
+    },
+    {
+        "id": "user_b72680",
+        "username": "Tomas",
+        "password": "$2y$10$2eqqIrAZCnDr55BXglXNa.HueWFjQZiMw7r9WlNeZnUMnaviz.8pG",
+        "role": "admin",
+        "profile_image_filename": "user_b72680.jpg",
+        "created_at": "2025-06-02 21:59:11",
+        "areas_admin": [
+            "682c2695244f3",
+            "682c26aeee58a",
+            "682c26c5b884b",
+            "682c26e52309a",
+            "682c271d63a9a",
+            "682c2744b5f8e",
+            "682c2763582f0"
+        ]
+    },
+    {
+        "id": "user_f20b97",
+        "username": "Israel",
+        "password": "$2y$10$1fLIUOfCcQKOs7VLIsiHqOG6xTjq6e1\/5hjXVjOE\/NxROqjlUOa6.",
+        "role": "admin",
+        "profile_image_filename": "user_f20b97.jpg",
+        "created_at": "2025-06-02 22:00:12",
+        "areas_admin": [
+            "682c26aeee58a",
+            "682c26c5b884b"
+        ]
+    },
+    {
+        "id": "user_96a2b6",
+        "username": "Eleazar",
+        "password": "$2y$10$dq08HtnZq\/xYj5hQVWzzQO1ak3M5b4T5Be2V7iArAUfTFQwwXx8Mu",
+        "role": "admin",
+        "profile_image_filename": "user_96a2b6.png",
+        "created_at": "2025-06-02 22:01:42",
+        "areas_admin": [
+            "682c2695244f3"
+        ]
+    },
+    {
+        "id": "user_2b6711",
+        "username": "Jennifer",
+        "password": "$2y$10$pJ.P64CCHWl.XaEdR0qtgOMrC5zahJr480dd30vj9Lr1FHzqE6y5i",
+        "role": "admin",
+        "profile_image_filename": "user_2b6711.jpg",
+        "created_at": "2025-06-02 22:02:58",
+        "areas_admin": [
+            "682c26e52309a",
+            "682c271d63a9a",
+            "682c2744b5f8e"
+        ]
+    },
+    {
+        "id": "user_1af019",
+        "username": "Sandra",
+        "password": "$2y$10$okhVhmL6wFPUe6OgKi70jeQDAZn7RRnZl9G0I8jyzD7ALX8OjW40W",
+        "role": "admin",
+        "profile_image_filename": "user_1af019.jpg",
+        "created_at": "2025-06-02 22:03:35",
+        "areas_admin": [
+            "682c2763582f0",
+            "682c2695244f3"
+        ]
+    },
+    {
+        "id": "user_c649aa",
+        "username": "Edier",
+        "password": "$2y$10$ez.ipDx6fHDe87SDNGN3ZeTZOuY4xRYmo2u\/WTWJ2tFboUZnN8Z4K",
+        "role": "editor",
+        "profile_image_filename": "user_c649aa.jpg",
+        "created_at": "2025-06-02 22:22:26",
+        "areas_editor": [
+            "682c2695244f3"
+        ]
+    },
+    {
+        "id": "user_2d5189",
+        "username": "Pepito",
+        "password": "$2y$10$ShQKJjnaEtQ5L\/we\/gzaQ.yS6ZDg2KrpWB5nrFL3aDIdEBpTnXOBW",
+        "role": "editor",
+        "profile_image_filename": "user_2d5189.png",
+        "created_at": "2025-06-03 02:52:50",
+        "areas_admin": [],
+        "areas_editor": [
+            "682c271d63a9a"
+        ]
+    },
+    {
+        "id": "user_928b45",
+        "username": "Felipe",
+        "password": "$2y$10$0j52DrpL0kbYZEc4CVBZ4uHqzOvbgw0fMMyw\/qaorQv\/lv8u60tV6",
+        "role": "editor",
+        "profile_image_filename": "user_928b45.png",
+        "created_at": "2025-06-03 02:53:21",
+        "areas_admin": [],
+        "areas_editor": [
+            "682c2763582f0"
+        ]
+    }
+]

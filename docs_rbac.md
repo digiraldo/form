@@ -139,3 +139,58 @@ Para configurar el sistema desde cero:
 3. Cree los usuarios Admin y asígnelos a sus áreas.
 4. Cree los usuarios Editor y asígnelos a sus áreas.
 5. Asegúrese de que los archivos JSON estén correctamente formateados.
+
+
+Quiero un archivo llamado reset.php, que al hacer clic en el me deje el proyecto en el estado inicial, es decir, que elimine todos los formularios y usuarios, y deje las áreas como están. El archivo debe tener un botón que al hacer clic ejecute la acción de reinicio.
+
+```php
+<?php
+session_start();
+header('Content-Type: application/json');
+
+// Verificar autenticación y rol de propietario
+if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== true || 
+    !isset($_SESSION['user_id']) || !isset($_SESSION['user_role']) || $_SESSION['user_role'] !== 'owner') {
+    http_response_code(403);
+    echo json_encode(['success' => false, 'message' => 'Acceso denegado. Solo el propietario puede realizar esta acción.']);
+    exit;
+}
+
+// Función para eliminar todos los formularios y usuarios
+function resetProject($backup_base_dir) {
+    // Eliminar formularios
+    $forms_dir = $backup_base_dir . 'data/forms/';
+    array_map('unlink', glob("$forms_dir*"));
+
+    // Eliminar usuarios
+    $users_file = $backup_base_dir . 'data/users.json';
+    if (file_exists($users_file)) {
+        file_put_contents($users_file, json_encode([]));
+    }
+
+    return ['success' => true, 'message' => 'Proyecto reiniciado exitosamente.'];
+}
+
+// Ejecutar reinicio al hacer clic en el botón
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $result = resetProject(__DIR__ . '/../');
+    echo json_encode($result);
+    exit;
+}
+?>
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Reiniciar Proyecto</title>
+</head>
+<body>
+    <h1>Reiniciar Proyecto</h1>
+    <p>Esto eliminará todos los formularios y usuarios, y dejará las áreas como están.</p>
+    <form method="post">
+        <button type="submit">Reiniciar Proyecto</button>
+    </form>
+</body>
+</html>

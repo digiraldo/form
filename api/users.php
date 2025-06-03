@@ -68,8 +68,112 @@ function get_user_by_id($user_id) {
         if ($user['id'] === $user_id) {
             return $user;
         }
+    }    return null;
+}
+
+// Funciones auxiliares para áreas
+function get_areas_by_admin($user_id) {
+    $areas_path = __DIR__ . '/../data/areas.json';
+    if (!file_exists($areas_path)) return [];
+    $areas = json_decode(file_get_contents($areas_path), true);
+    if (!is_array($areas)) return [];
+    $result = [];
+    foreach ($areas as $area) {
+        if (isset($area['admins']) && is_array($area['admins']) && in_array($user_id, $area['admins'])) {
+            $result[] = $area['id'];
+        }
     }
-    return null;
+    return $result;
+}
+
+function get_editores_de_areas($areas_ids) {
+    $areas = json_decode(file_get_contents(__DIR__ . '/../data/areas.json'), true);
+    $editores = [];
+    foreach ($areas as $area) {
+        if (in_array($area['id'], $areas_ids)) {
+            $editores = array_merge($editores, $area['editors']);
+        }
+    }
+    return $editores;
+}
+
+function asignar_usuario_a_area($user_id, $rol, $area_id) {
+    $areas_path = __DIR__ . '/../data/areas.json';
+    $areas = json_decode(file_get_contents($areas_path), true);
+    
+    // Primero asignamos el usuario al área seleccionada con el rol correcto
+    foreach ($areas as &$area) {
+        if ($area['id'] === $area_id) {
+            // Añadir al usuario al área seleccionada con el rol especificado
+            if ($rol === 'admin' && !in_array($user_id, $area['admins'])) {
+                $area['admins'][] = $user_id;
+                
+                // Si el usuario estaba como editor en esta área, lo mantenemos ahí también
+                // para permitir roles múltiples en la misma área
+                if (in_array($user_id, $area['editors'])) {
+                    // Opcional: si quieres implementar roles exclusivos, 
+                    // descomentar la siguiente línea:
+                    // $key = array_search($user_id, $area['editors']); unset($area['editors'][$key]);
+                }
+            }
+            
+            if ($rol === 'editor' && !in_array($user_id, $area['editors'])) {
+                $area['editors'][] = $user_id;
+                
+                // Si el usuario estaba como admin en esta área, lo mantenemos ahí también
+                // para permitir roles múltiples en la misma área
+                if (in_array($user_id, $area['admins'])) {
+                    // Opcional: si quieres implementar roles exclusivos, 
+                    // descomentar la siguiente línea:
+                    // $key = array_search($user_id, $area['admins']); unset($area['admins'][$key]);
+                }
+            }
+        }
+        // Ya no eliminamos al usuario de otras áreas para mantener su presencia multi-área
+    }
+    
+    // Actualizar el archivo de áreas
+    file_put_contents($areas_path, json_encode($areas, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
+    
+    // Actualizar también los arrays en el usuario
+    $users_path = __DIR__ . '/../data/users.json';
+    $users = json_decode(file_get_contents($users_path), true);
+    
+    foreach ($users as &$user) {
+        if ($user['id'] === $user_id) {
+            // Asegurarnos de que existan los arrays necesarios
+            if (!isset($user['areas_admin'])) {
+                $user['areas_admin'] = [];
+            } else {
+                // Filtrar valores null/undefined
+                $user['areas_admin'] = array_filter($user['areas_admin'], function($area) {
+                    return $area !== null && $area !== '';
+                });
+            }
+            
+            if (!isset($user['areas_editor'])) {
+                $user['areas_editor'] = [];
+            } else {
+                // Filtrar valores null/undefined
+                $user['areas_editor'] = array_filter($user['areas_editor'], function($area) {
+                    return $area !== null && $area !== '';
+                });
+            }
+            
+            // Actualizar el array correspondiente
+            if ($rol === 'admin' && !in_array($area_id, $user['areas_admin'])) {
+                $user['areas_admin'][] = $area_id;
+            }
+            if ($rol === 'editor' && !in_array($area_id, $user['areas_editor'])) {
+                $user['areas_editor'][] = $area_id;
+            }
+            
+            break; // Ya encontramos al usuario, no necesitamos seguir buscando
+        }
+    }
+    
+    // Guardar los cambios en el archivo de usuarios
+    file_put_contents($users_path, json_encode($users, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
 }
 
 // Solo ejecutar la lógica de routing si se accede directamente a este archivo
@@ -139,8 +243,7 @@ switch ($action) {
                     $editor_areas = isset($user['areas_editor']) && is_array($user['areas_editor']) 
                         ? array_filter($user['areas_editor'], function($area) { return $area !== null && $area !== ''; }) 
                         : [];
-                    $admin_areas = $user_areas['areas_admin'];
-                    
+                    $admin_areas = is_array($user_areas) && isset($user_areas['areas_admin']) ? $user_areas['areas_admin'] : [];
                     foreach ($editor_areas as $area) {
                         if (in_array($area, $admin_areas)) return true;
                     }
@@ -590,8 +693,7 @@ switch ($action) {
                 'success' => $response_success,
                 'message' => $message,
                 'data' => $updated_data_for_response
-            ]);
-            exit;
+            ]);            exit;
 
         } else {
             http_response_code(405); // Method Not Allowed
@@ -599,9 +701,8 @@ switch ($action) {
             echo json_encode(['success' => false, 'message' => 'Método no permitido.']);
             exit;
         }
-        break; // BREAK para case 'update_profile'
 
-    case 'update_user': 
+    case 'update_user':
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             error_log("------ [API Users - update_user] INICIO ------");
             error_log("[API Users - update_user] Datos POST: " . print_r($_POST, true));
@@ -768,111 +869,11 @@ switch ($action) {
             http_response_code(405);
             echo json_encode(['success' => false, 'message' => 'Método no permitido.']);
         }
-        break; // BREAK para case 'delete_user'
-
-    default:
+        break; // BREAK para case 'delete_user'    default:
         header('Content-Type: application/json');
         http_response_code(400);
         echo json_encode(['success' => false, 'message' => 'Acción de usuario no válida o no especificada.']);
         break;
-}
-
-// Funciones auxiliares para áreas
-function get_areas_by_admin($admin_id) {
-    $areas = json_decode(file_get_contents(__DIR__ . '/../data/areas.json'), true);
-    $result = [];
-    foreach ($areas as $area) {
-        if (in_array($admin_id, $area['admins'])) {
-            $result[] = $area['id'];
-        }
-    }
-    return $result;
-}
-function get_editores_de_areas($areas_ids) {
-    $areas = json_decode(file_get_contents(__DIR__ . '/../data/areas.json'), true);
-    $editores = [];
-    foreach ($areas as $area) {
-        if (in_array($area['id'], $areas_ids)) {
-            $editores = array_merge($editores, $area['editors']);
-        }
-    }
-    return $editores;
-}
-function asignar_usuario_a_area($user_id, $rol, $area_id) {
-    $areas_path = __DIR__ . '/../data/areas.json';
-    $areas = json_decode(file_get_contents($areas_path), true);
-    
-    // Primero asignamos el usuario al área seleccionada con el rol correcto
-    foreach ($areas as &$area) {
-        if ($area['id'] === $area_id) {
-            // Añadir al usuario al área seleccionada con el rol especificado
-            if ($rol === 'admin' && !in_array($user_id, $area['admins'])) {
-                $area['admins'][] = $user_id;
-                
-                // Si el usuario estaba como editor en esta área, lo mantenemos ahí también
-                // para permitir roles múltiples en la misma área
-                if (in_array($user_id, $area['editors'])) {
-                    // Opcional: si quieres implementar roles exclusivos, 
-                    // descomentar la siguiente línea:
-                    // $key = array_search($user_id, $area['editors']); unset($area['editors'][$key]);
-                }
-            }
-            
-            if ($rol === 'editor' && !in_array($user_id, $area['editors'])) {
-                $area['editors'][] = $user_id;
-                
-                // Si el usuario estaba como admin en esta área, lo mantenemos ahí también
-                // para permitir roles múltiples en la misma área
-                if (in_array($user_id, $area['admins'])) {
-                    // Opcional: si quieres implementar roles exclusivos, 
-                    // descomentar la siguiente línea:
-                    // $key = array_search($user_id, $area['admins']); unset($area['admins'][$key]);
-                }
-            }
-        }
-        // Ya no eliminamos al usuario de otras áreas para mantener su presencia multi-área
-    }
-    
-    // Actualizar el archivo de áreas
-    file_put_contents($areas_path, json_encode($areas, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
-    
-    // Actualizar también los arrays en el usuario
-    $users_path = __DIR__ . '/../data/users.json';
-    $users = json_decode(file_get_contents($users_path), true);        foreach ($users as &$user) {
-            if ($user['id'] === $user_id) {
-                // Asegurarnos de que existan los arrays necesarios
-                if (!isset($user['areas_admin'])) {
-                    $user['areas_admin'] = [];
-                } else {
-                    // Filtrar valores null/undefined
-                    $user['areas_admin'] = array_filter($user['areas_admin'], function($area) {
-                        return $area !== null && $area !== '';
-                    });
-                }
-                
-                if (!isset($user['areas_editor'])) {
-                    $user['areas_editor'] = [];
-                } else {
-                    // Filtrar valores null/undefined
-                    $user['areas_editor'] = array_filter($user['areas_editor'], function($area) {
-                        return $area !== null && $area !== '';
-                    });
-                }
-                
-                // Actualizar el array correspondiente
-                if ($rol === 'admin' && !in_array($area_id, $user['areas_admin'])) {
-                    $user['areas_admin'][] = $area_id;
-                }
-            if ($rol === 'editor' && !in_array($area_id, $user['areas_editor'])) {
-                $user['areas_editor'][] = $area_id;
-            }
-            
-            break; // Ya encontramos al usuario, no necesitamos seguir buscando
-        }
-    }
-    
-    // Guardar los cambios en el archivo de usuarios
-    file_put_contents($users_path, json_encode($users, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
 }
 
 } // Fin del if (basename($_SERVER['PHP_SELF']) === 'users.php')
