@@ -141,6 +141,16 @@ Para configurar el sistema desde cero:
 5. Asegúrese de que los archivos JSON estén correctamente formateados.
 
 
+
+// Diagnóstico específico para el usuario owner
+session_start();
+
+// Simular sesión del usuario owner
+$_SESSION['admin_logged_in'] = true;
+$_SESSION['user_role'] = 'owner';
+$_SESSION['user_id'] = 'user_9e62c6'; // ID del owner (centromateo)
+
+
 Quiero un archivo llamado reset.php, que al hacer clic en el me deje el proyecto en el estado inicial, es decir, que elimine todos los formularios y usuarios, y deje las áreas como están. El archivo debe tener un botón que al hacer clic ejecute la acción de reinicio.
 
 ```php
@@ -194,3 +204,4 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     </form>
 </body>
 </html>
+```

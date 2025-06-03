@@ -8,9 +8,42 @@ if (typeof currentUser === 'undefined') {
 document.addEventListener('DOMContentLoaded', function () {
     // --- Modals & Toast ---
     const createEditFormModalEl = document.getElementById('createEditFormModal');
-    const createEditFormModal = createEditFormModalEl ? new bootstrap.Modal(createEditFormModalEl) : null;
-    const confirmDeleteModalEl = document.getElementById('confirmDeleteModal');
+    const createEditFormModal = createEditFormModalEl ? new bootstrap.Modal(createEditFormModalEl) : null;    const confirmDeleteModalEl = document.getElementById('confirmDeleteModal');
     const confirmDeleteModal = confirmDeleteModalEl ? new bootstrap.Modal(confirmDeleteModalEl) : null;
+    
+    // Event listener para el botón de confirmación de eliminación
+    const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
+    if (confirmDeleteBtn) {
+        confirmDeleteBtn.addEventListener('click', function() {
+            const formIdToDelete = this.dataset.formIdToDelete;
+            
+            if (!formIdToDelete) {
+                showToast('Error: No se pudo obtener el ID del formulario a eliminar.', true);
+                return;
+            }
+            
+            // Realizar la petición DELETE al API
+            fetch(`api/forms.php?action=delete&id=${formIdToDelete}`, {
+                method: 'DELETE'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Cerrar el modal
+                    if (confirmDeleteModal) confirmDeleteModal.hide();
+                    // Recargar la tabla de formularios
+                    reloadFormsTable();
+                    showToast(data.message || 'Formulario eliminado exitosamente.');
+                } else {
+                    showToast('Error al eliminar: ' + (data.message || 'Error desconocido'), true);
+                }
+            })
+            .catch(error => {
+                console.error('Error al eliminar formulario:', error);
+                showToast('Error de conexión al eliminar el formulario.', true);
+            });
+        });
+    }
       
     // Función para cargar las áreas en el selector del formulario
     function loadAvailableAreas(selectElement, callback) {
