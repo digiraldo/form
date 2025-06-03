@@ -10,17 +10,6 @@ DirectoryIndex index.php
     Require all denied
 </Files>
 
-# Proteger directorios de datos
-<Directory "data">
-    Require all denied
-</Directory>
-
-# Permitir acceso a backups solo con autenticación
-<Directory "backups">
-    # Aquí se podría agregar autenticación adicional si es necesario
-    # Por ahora se maneja desde PHP
-</Directory>
-
 # Configuración de tipos MIME
 <IfModule mod_mime.c>
     AddType application/json .json
