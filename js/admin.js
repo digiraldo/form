@@ -5,7 +5,62 @@ if (typeof currentUser === 'undefined') {
     window.currentUser = {};
 }
 
+// Helper centralizado para peticiones fetch con soporte CSRF incremental
+async function apiFetch(url, options = {}) {
+    const finalOptions = { credentials: 'include', ...options };
+    finalOptions.headers = finalOptions.headers || {};
+    // Obtener token CSRF desde meta tag o variable global
+    let token = null;
+    const meta = document.querySelector('meta[name="csrf-token"]');
+    if (meta) token = meta.getAttribute('content');
+    if (!token && window.CSRF_TOKEN) token = window.CSRF_TOKEN;
+    if (token) finalOptions.headers['X-CSRF-Token'] = token;
+    let response = await fetch(url, finalOptions);
+    // Capturar posible nuevo token desde cabecera de respuesta
+    const newToken = response.headers.get('X-CSRF-Token');
+    if (newToken) {
+        window.CSRF_TOKEN = newToken;
+        const metaEl = document.querySelector('meta[name="csrf-token"]');
+        if (metaEl) metaEl.setAttribute('content', newToken);
+    }
+    // Si token inválido (419) intentar rotar y reintentar una vez
+    if (response.status === 419) {
+        try {
+            const rotate = await fetch('api/security.php?action=csrf', { method: 'GET', credentials: 'include' });
+            if (rotate.ok) {
+                const rotateJson = await rotate.json();
+                if (rotateJson.csrf_token) {
+                    window.CSRF_TOKEN = rotateJson.csrf_token;
+                    const metaEl2 = document.querySelector('meta[name="csrf-token"]');
+                    if (metaEl2) metaEl2.setAttribute('content', rotateJson.csrf_token);
+                    finalOptions.headers['X-CSRF-Token'] = rotateJson.csrf_token;
+                    response = await fetch(url, finalOptions);
+                }
+            }
+        } catch(e) { /* ignorar */ }
+    }
+    // Si 401 intentar redirigir al login (sesión expirada)
+    if (response.status === 401) {
+        console.warn('Sesión expirada o no autorizada, redirigiendo a login.');
+        setTimeout(()=>{ window.location.href = 'login.php'; }, 800);
+    }
+    let data;
+    try { data = await response.json(); } catch(e){ data = { success:false, message:'Respuesta no JSON', raw:true }; }
+    return data;
+}
+
 document.addEventListener('DOMContentLoaded', function () {
+    // Rotar token CSRF voluntariamente al hacer logout (si hay botón con id logoutBtn)
+    const logoutBtn = document.getElementById('logoutBtn');
+    if (logoutBtn) {
+        logoutBtn.addEventListener('click', function(e){
+            // Después del logout el backend destruirá sesión; pedimos un nuevo token al recargar login
+            setTimeout(() => {
+                apiFetch('api/security.php?action=csrf_rotate', { method: 'POST' })
+                    .catch(()=>{});
+            }, 1000);
+        });
+    }
     // --- Modals & Toast ---
     const createEditFormModalEl = document.getElementById('createEditFormModal');
     const createEditFormModal = createEditFormModalEl ? new bootstrap.Modal(createEditFormModalEl) : null;    const confirmDeleteModalEl = document.getElementById('confirmDeleteModal');
@@ -23,11 +78,9 @@ document.addEventListener('DOMContentLoaded', function () {
             }
             
             // Realizar la petición DELETE al API
-            fetch(`api/forms.php?action=delete&id=${formIdToDelete}`, {
+            apiFetch(`api/forms.php?action=delete&id=${formIdToDelete}`, {
                 method: 'DELETE'
-            })
-            .then(response => response.json())
-            .then(data => {
+            }).then(data => {
                 if (data.success) {
                     // Cerrar el modal
                     if (confirmDeleteModal) confirmDeleteModal.hide();
@@ -52,8 +105,7 @@ document.addEventListener('DOMContentLoaded', function () {
         // Mostrar indicador de carga
         selectElement.innerHTML = '<option value="">Cargando áreas...</option>';
         
-        fetch('api/areas_list_available.php')
-            .then(response => response.json())
+        apiFetch('api/areas_list_available.php')
             .then(data => {
                 if (data.success && Array.isArray(data.areas)) {
                     // Almacenar áreas globalmente para uso en otras partes
@@ -283,8 +335,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // --- Cargar todos los usuarios antes de inicializar DataTables ---
     function loadAllUsersForTable(callback) {
-        fetch('api/users.php?action=list')
-            .then(res => res.json())
+        apiFetch('api/users.php?action=list')
             .then(data => { // Corregido: se agregaron paréntesis alrededor de 'data'
                 if (data.success && Array.isArray(data.data)) {
                     window.usersById = {};
@@ -460,9 +511,21 @@ document.addEventListener('DOMContentLoaded', function () {
                                 className: 'text-center',
                                 orderable: false,
                                 render: function(data, type, row) {
-                                    if (!data || !window.usersById) return '<span class="text-muted">Desconocido</span>';
+                                    if (!data || !window.usersById) {
+                                        return '<span class="text-muted" data-bs-toggle="tooltip" data-bs-title="Editor no disponible">?</span>';
+                                    }
+                                    
                                     const user = window.usersById[data];
-                                    if (!user) return '<span class="text-muted">Desconocido</span>';
+                                    if (!user) {
+                                        // En lugar de mostrar "Desconocido", mostrar un placeholder que indique que el editor no está disponible
+                                        // Esto puede suceder cuando el usuario actual no tiene permisos para ver todos los usuarios
+                                        return `<span class="profile-image-placeholder-table rounded-circle border border-3 border-secondary" 
+                                                style="width:32px;height:32px;display:inline-flex;align-items:center;justify-content:center;background:#6c757d;color:#ffffff;font-weight:bold;font-size:0.8rem;" 
+                                                data-bs-toggle="tooltip" 
+                                                data-bs-title="Editor no disponible por permisos">
+                                            <i class="fas fa-user-lock"></i>
+                                        </span>`;
+                                    }
                                     
                                     let borderColorClass = 'border-secondary'; // Color de borde por defecto (gris)
                                     const userRole = user.role ? user.role.toLowerCase() : '';
@@ -1112,6 +1175,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const chartsSection = document.getElementById('chartsSection'); 
     const chartsRenderContainer = document.getElementById('chartsRenderContainer');
     const individualResponsesTableContainer = document.getElementById('individualResponsesTableContainer');
+    const summaryResponsesTableContainer = document.getElementById('summaryResponsesTableContainer');
     const exportResponsesCsvBtn = document.getElementById('exportResponsesCsvBtn');
     const closeChartsSectionBtn = document.getElementById('closeChartsSection'); 
     let activeCharts = []; 
@@ -1128,9 +1192,14 @@ document.addEventListener('DOMContentLoaded', function () {
         if (individualResponsesTableContainer) individualResponsesTableContainer.innerHTML = '<p class="text-muted text-center">Selecciona un formulario para ver las respuestas individuales.</p>';
     }
 
+    function clearSummaryTable() {
+        if (summaryResponsesTableContainer) summaryResponsesTableContainer.innerHTML = '<p class="text-muted text-center">Selecciona un formulario para ver el resumen.</p>';
+    }
+
     function clearAnalysisData() {
         clearCharts();
         clearIndividualResponsesTable();
+        clearSummaryTable();
         
         const responsesCountBadge = document.getElementById('responsesCountBadge');
         if (responsesCountBadge) responsesCountBadge.textContent = '0';
@@ -1179,13 +1248,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 loadAvailableAreas(areaSelector);
             }
 
-            fetch(`api/forms.php?action=get&id=${formId}`) 
-                .then(response => {
-                    if (!response.ok) { 
-                        return response.json().then(err => { throw err; }); 
-                    }
-                    return response.json();
-                })
+            apiFetch(`api/forms.php?action=get&id=${formId}`)
                 .then(result => {
                     if (result.success && result.data) {
                         const formData = result.data;
@@ -1240,8 +1303,7 @@ document.addEventListener('DOMContentLoaded', function () {
             if (!confirm(`¿Estás seguro de que quieres duplicar este formulario (ID: ${formId})?`)) {
                 return;
             }
-            fetch(`api/forms.php?action=duplicate&id=${formId}`, { method: 'POST' }) 
-            .then(response => response.json())
+            apiFetch(`api/forms.php?action=duplicate&id=${formId}`, { method: 'POST' })
             .then(data => {
                 if (data.success) {
                     reloadFormsTable();
@@ -1276,13 +1338,7 @@ document.addEventListener('DOMContentLoaded', function () {
             const chartsTabButton = document.getElementById('charts-tab');
             if (chartsTabButton) new bootstrap.Tab(chartsTabButton).show();
             
-            fetch(`api/responses.php?action=get_responses&form_id=${currentFormIdForAnalysis}`)
-                .then(response => {
-                    if (!response.ok) { 
-                        return response.json().then(err => { throw err; }); 
-                    }
-                    return response.json();
-                })
+            apiFetch(`api/responses.php?action=get_responses&form_id=${currentFormIdForAnalysis}`)
                 .then(responsesResult => {
                     if (responsesResult.success && responsesResult.data) {
                         currentFormAllResponsesData = responsesResult.data;
@@ -1297,13 +1353,13 @@ document.addEventListener('DOMContentLoaded', function () {
                            currentFormAllResponsesData.length > 0 ? exportResponsesCsvBtn.classList.remove('disabled') : exportResponsesCsvBtn.classList.add('disabled');
                         }
 
-                        fetch(`api/forms.php?action=get_public&id=${currentFormIdForAnalysis}`) 
-                            .then(structureResponse => structureResponse.json())
+                        apiFetch(`api/forms.php?action=get_public&id=${currentFormIdForAnalysis}`)
                             .then(structureResult => {
                                 if (structureResult.success && structureResult.data && structureResult.data.fields) {
                                     currentFormFieldsStructure = structureResult.data.fields;
                                     renderCharts(currentFormAllResponsesData, currentFormFieldsStructure, currentFormTitleForAnalysis);
                                     renderIndividualResponsesTable(currentFormAllResponsesData, currentFormFieldsStructure);
+                                    renderSummaryTable(currentFormAllResponsesData, currentFormFieldsStructure);
                                 } else {
                                     showToast('Error al cargar la estructura del formulario para el análisis.', true);
                                     clearAnalysisData(); 
@@ -1369,10 +1425,14 @@ document.addEventListener('DOMContentLoaded', function () {
                         <button type="button" class="btn btn-sm btn-outline-secondary me-2 field-config-btn hvr-icon-spin" title="Configurar Campo"><i class="fas fa-cog hvr-icon"></i></button>
                         <button type="button" class="btn btn-sm btn-outline-danger remove-field-btn hvr-buzz-out" data-field-id="${fieldId}" title="Eliminar Campo"><i class="fas fa-times"></i></button>
                     </div>
-                </div>
-                <div class="mb-2">
+                </div>                <div class="mb-2">
                     <label for="${fieldId}-label" class="form-label small">Texto de la Pregunta/Etiqueta:</label>
                     <input type="text" class="form-control form-control-sm" id="${fieldId}-label" name="fields[${fieldId}][label]" placeholder="Ej: ¿Cuál es tu nombre?" required value="${existingData?.label || ''}">
+                </div>
+                <div class="mb-2">
+                    <label for="${fieldId}-description" class="form-label small">Texto de Ayuda/Descripción (opcional):</label>
+                    <textarea class="form-control form-control-sm" id="${fieldId}-description" name="fields[${fieldId}][description]" rows="2" placeholder="Texto de ayuda que aparecerá junto a un ícono de interrogación...">${existingData?.description || ''}</textarea>
+                    <small class="form-text text-muted">Si completas este campo, aparecerá un ícono de ayuda (?) junto a la pregunta.</small>
                 </div>
         `;
 
@@ -1645,12 +1705,20 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
             });
 
+            // Asegurar inclusión explícita del token CSRF en el cuerpo (además del header)
+            try {
+                const metaTokenEl = document.querySelector('meta[name="csrf-token"]');
+                const tk = (metaTokenEl && metaTokenEl.getAttribute('content')) || window.CSRF_TOKEN;
+                if (tk) {
+                    formData.append('csrf_token', tk);
+                    console.debug('[FormBuilder] Adjuntando csrf_token al FormData (prefijo):', tk.substring(0,8));
+                } else {
+                    console.warn('[FormBuilder] No se encontró token CSRF para adjuntar al FormData');
+                }
+            } catch(e) { console.warn('Error adjuntando csrf_token', e); }
+
             const endpoint = action === 'create' ? 'api/forms.php?action=create' : `api/forms.php?action=edit&id=${formIdValue}`;
-            fetch(endpoint, {
-                method: 'POST',
-                body: formData // No establecer Content-Type, el navegador lo hace automáticamente
-            })
-            .then(response => response.json())
+            apiFetch(endpoint, { method: 'POST', body: formData })
             .then(result => {
                 if (result.success) {
                     if(createEditFormModal) createEditFormModal.hide();
@@ -1677,23 +1745,36 @@ document.addEventListener('DOMContentLoaded', function () {
             return;
         }
         
-        const fieldDetailsMap = new Map();
+        // Mapear detalles por label actual y mantener referencia a field_uid
+        const fieldDetailsMap = new Map(); // label_actual -> {type, options, field_uid}
+        const uidToLabel = new Map(); // field_uid -> label_actual
         formFields.forEach(field => {
-            fieldDetailsMap.set(field.label, { type: field.type, options: field.options || [] });
+            fieldDetailsMap.set(field.label, { type: field.type, options: field.options || [], field_uid: field.field_uid });
+            if (field.field_uid) uidToLabel.set(field.field_uid, field.label);
         });
 
+        // questionAggregations siempre usará el label ACTUAL aunque el label histórico haya cambiado
         const questionAggregations = {};
         responsesData.forEach(response => {
-            for (const questionLabel in response.data) {
-                if (!questionAggregations[questionLabel]) {
-                    questionAggregations[questionLabel] = [];
+            // Para cada field definido actualmente, intentar obtener valor desde label o data_uid
+            formFields.forEach(field => {
+                const currentLabel = field.label;
+                let value = undefined;
+                // 1. Intentar datos por label (compatibilidad retro)
+                if (response.data && Object.prototype.hasOwnProperty.call(response.data, currentLabel)) {
+                    value = response.data[currentLabel];
+                } else if (response.data_uid && field.field_uid && Object.prototype.hasOwnProperty.call(response.data_uid, field.field_uid)) {
+                    // 2. Fallback a data_uid estable
+                    value = response.data_uid[field.field_uid];
                 }
-                if (Array.isArray(response.data[questionLabel])) {
-                    questionAggregations[questionLabel].push(...response.data[questionLabel]);
+                if (value === undefined || value === null || value === '') return; // nada que agregar
+                if (!questionAggregations[currentLabel]) questionAggregations[currentLabel] = [];
+                if (Array.isArray(value)) {
+                    questionAggregations[currentLabel].push(...value);
                 } else {
-                    questionAggregations[questionLabel].push(response.data[questionLabel]);
+                    questionAggregations[currentLabel].push(value);
                 }
-            }
+            });
         });
 
         let chartCount = 0;
@@ -1781,6 +1862,11 @@ document.addEventListener('DOMContentLoaded', function () {
             individualResponsesTableContainer.innerHTML = '<p class="text-muted text-center">No hay respuestas registradas para este formulario.</p>';
             return;
         }
+        // Construir mapa field_uid -> field metadata y label original
+        const uidMap = new Map();
+        fieldsStructure.forEach(f => {
+            if (f.field_uid) uidMap.set(f.field_uid, f);
+        });
 
         // Crear tabla con clases modernas
         const table = document.createElement('table');
@@ -1807,8 +1893,13 @@ document.addEventListener('DOMContentLoaded', function () {
             if (field.type === 'birthdate') {
                 // Columna para la fecha de nacimiento
                 const thFecha = document.createElement('th');
-                thFecha.textContent = 'Fecha de Nacimiento';
+                const fullLabelFecha = 'Fecha de Nacimiento';
+                thFecha.textContent = fullLabelFecha.substring(0, 8) + '…';
                 thFecha.scope = 'col';
+                thFecha.style.cursor = 'help';
+                thFecha.setAttribute('data-bs-toggle', 'tooltip');
+                thFecha.setAttribute('data-bs-placement', 'top');
+                thFecha.setAttribute('title', fullLabelFecha);
                 headerRow.appendChild(thFecha);
                 // Columna para la edad
                 const thEdad = document.createElement('th');
@@ -1817,11 +1908,26 @@ document.addEventListener('DOMContentLoaded', function () {
                 headerRow.appendChild(thEdad);
             } else {
                 const th = document.createElement('th');
-                th.textContent = field.label;
+                const fullLabel = field.label || '';
+                if (fullLabel.length > 8) {
+                    th.textContent = fullLabel.substring(0, 8) + '…';
+                    th.setAttribute('data-bs-toggle', 'tooltip');
+                    th.setAttribute('data-bs-placement', 'top');
+                    th.setAttribute('title', fullLabel);
+                    th.style.cursor = 'help';
+                } else {
+                    th.textContent = fullLabel;
+                }
                 th.scope = 'col';
                 headerRow.appendChild(th);
             }
         });
+
+        // Columna Acciones
+        const thAcciones = document.createElement('th');
+        thAcciones.textContent = 'Acciones';
+        thAcciones.scope = 'col';
+        headerRow.appendChild(thAcciones);
         
         // Añadir filas de datos con animación
         responsesData.forEach((response, index) => {
@@ -1872,7 +1978,11 @@ document.addEventListener('DOMContentLoaded', function () {
                         cellEdad.innerHTML = `<span class='badge bg-secondary'>N/D</span>`;
                     }
                 } else if (field.type === 'file') {
+                    // Intentar recuperar por label, si no por field_uid en data_uid
                     let answer = response.data[field.label];
+                    if ((answer === undefined || answer === null) && response.data_uid && field.field_uid && response.data_uid[field.field_uid]) {
+                        answer = response.data_uid[field.field_uid];
+                    }
                     let cell = row.insertCell();
                     if (answer) {
                         cell.innerHTML = `<a href="uploads/${answer}" target="_blank" class="btn btn-outline-primary btn-sm"><i class="fas fa-download"></i> Descargar</a>`;
@@ -1881,6 +1991,9 @@ document.addEventListener('DOMContentLoaded', function () {
                     }
                 } else {
                     let answer = response.data[field.label];
+                    if ((answer === undefined || answer === null) && response.data_uid && field.field_uid && response.data_uid[field.field_uid]) {
+                        answer = response.data_uid[field.field_uid];
+                    }
                     let cell = row.insertCell();
                     if (Array.isArray(answer)) {
                         cell.textContent = answer.join(', ');
@@ -1889,6 +2002,11 @@ document.addEventListener('DOMContentLoaded', function () {
                     }
                 }
             });
+
+            // Celda de Acciones - botón Ver
+            const cellAcciones = row.insertCell();
+            const submissionIdEsc = (response.submission_id || '').replace(/"/g, '&quot;');
+            cellAcciones.innerHTML = `<button class="btn btn-sm btn-outline-info btn-view-response" data-submission-id="${submissionIdEsc}" title="Ver respuesta completa"><i class="fas fa-eye"></i></button>`;
         });
         
         // Ensamblar la tabla
@@ -1925,10 +2043,9 @@ document.addEventListener('DOMContentLoaded', function () {
             console.error("Error inicializando DataTables para respuestas individuales:", e);
         }
 
-        // Inicializar tooltips Bootstrap tras cada draw de la tabla de respuestas individuales:
-        const tooltipTriggerList = document.querySelectorAll('#individualResponsesTable [data-bs-toggle="tooltip"]');
-        tooltipTriggerList.forEach(function (tooltipTriggerEl) {
-            return new bootstrap.Tooltip(tooltipTriggerEl);
+        // Inicializar tooltips Bootstrap (cabeceras + botones de la tabla)
+        table.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(function (el) {
+            new bootstrap.Tooltip(el);
         });
     }
     
@@ -2422,8 +2539,11 @@ document.addEventListener('DOMContentLoaded', function () {
         const formData = new FormData();
         formData.append('user_id', editorId);
         
-        fetch(url, { method: 'POST', body: formData })
-            .then(res => res.json())
+        // Adjuntar csrf_token explícito
+        const metaTokenEl = document.querySelector('meta[name="csrf-token"]');
+        const tk = (metaTokenEl && metaTokenEl.getAttribute('content')) || window.CSRF_TOKEN;
+        if (tk && !formData.has('csrf_token')) formData.append('csrf_token', tk);
+        apiFetch(url, { method: 'POST', body: formData })
             .then(result => {
                 if (result.success) {
                     // Restaurar estilo normal del checkbox pero mantener el estado
@@ -2854,12 +2974,11 @@ document.addEventListener('DOMContentLoaded', function () {
         data.append('user_id', userId);
         data.append('action_type', action); // Cambiado de 'action' a 'action_type'
         
-        return fetch('api/forms.php?action=assign_cross_area_permission', {
-            method: 'POST',
-            body: data
-        })
-        .then(response => response.json())
-        .then(result => {
+    const metaTokenEl2 = document.querySelector('meta[name="csrf-token"]');
+    const tk2 = (metaTokenEl2 && metaTokenEl2.getAttribute('content')) || window.CSRF_TOKEN;
+    if (tk2 && !data.has('csrf_token')) data.append('csrf_token', tk2);
+    return apiFetch('api/forms.php?action=assign_cross_area_permission', { method: 'POST', body: data })
+    .then(result => {
             if (result.success) {
                 showToast(`
                     <div class="d-flex align-items-start">
@@ -2985,6 +3104,363 @@ document.addEventListener('DOMContentLoaded', function () {
             this.classList.toggle('btn-outline-primary', compactMode);
             this.innerHTML = compactMode ? '<i class="fas fa-layer-group"></i> Expandir' : '<i class="fas fa-layer-group"></i> Compactar';
         });
+    }
+
+    // --- Tabla de Resumen (móvil-friendly): ID + primeras 5 columnas + botón Ver ---
+    function renderSummaryTable(responsesData, fieldsStructure) {
+        if (!summaryResponsesTableContainer) return;
+        summaryResponsesTableContainer.innerHTML = '';
+
+        if (!responsesData || responsesData.length === 0) {
+            summaryResponsesTableContainer.innerHTML = '<p class="text-muted text-center">No hay respuestas registradas para este formulario.</p>';
+            return;
+        }
+
+        // Filtrar campos visibles (excluir image, downloadable)
+        const visibleFields = fieldsStructure.filter(f => f.type !== 'image' && f.type !== 'downloadable');
+
+        // Tomar solo los primeros 5 campos visibles
+        const previewFields = visibleFields.slice(0, 5);
+
+        const table = document.createElement('table');
+        table.className = 'table table-bordered table-hover align-middle mb-0';
+        table.style.width = '100%';
+
+        // ----- THEAD -----
+        const thead = document.createElement('thead');
+        thead.className = 'table-dark';
+        const headerRow = thead.insertRow();
+
+        // Columna ID
+        const thId = document.createElement('th');
+        thId.scope = 'col';
+        thId.textContent = 'ID';
+        headerRow.appendChild(thId);
+
+        // Columnas de los primeros 5 campos
+        previewFields.forEach(function(field) {
+            const th = document.createElement('th');
+            th.scope = 'col';
+            const fullLabel = field.label || '';
+            if (fullLabel.length > 8) {
+                th.textContent = fullLabel.substring(0, 8) + '…';
+                th.setAttribute('data-bs-toggle', 'tooltip');
+                th.setAttribute('data-bs-placement', 'top');
+                th.setAttribute('title', fullLabel);
+                th.style.cursor = 'help';
+            } else {
+                th.textContent = fullLabel;
+            }
+            headerRow.appendChild(th);
+        });
+
+        // Columna Acciones
+        const thAcc = document.createElement('th');
+        thAcc.scope = 'col';
+        thAcc.textContent = 'Ver';
+        headerRow.appendChild(thAcc);
+
+        table.appendChild(thead);
+
+        // ----- TBODY -----
+        const tbody = document.createElement('tbody');
+
+        responsesData.forEach(function(response) {
+            const row = tbody.insertRow();
+
+            // Celda ID (truncada con tooltip)
+            const cellId = row.insertCell();
+            const sid = response.submission_id || 'N/A';
+            cellId.innerHTML = `<code class="small" title="${sid}" data-bs-toggle="tooltip" data-bs-placement="top">${sid.substring(0, 6)}…</code>`;
+
+            // Celdas de los primeros 5 campos
+            previewFields.forEach(function(field) {
+                const cell = row.insertCell();
+
+                if (field.type === 'birthdate') {
+                    const age = (response.data && response.data[field.label] !== undefined)
+                        ? response.data[field.label]
+                        : ((response.data_uid && field.field_uid) ? (response.data_uid[field.field_uid] || '') : '');
+                    cell.innerHTML = age ? `<span class="badge bg-primary">${age} años</span>` : '<span class="text-muted">—</span>';
+                } else if (field.type === 'file') {
+                    let ans = (response.data && response.data[field.label]) || ((response.data_uid && field.field_uid) ? response.data_uid[field.field_uid] : '');
+                    cell.innerHTML = ans
+                        ? `<a href="uploads/${ans}" target="_blank" class="btn btn-outline-primary btn-sm py-0 px-1"><i class="fas fa-download"></i></a>`
+                        : '<span class="text-muted">—</span>';
+                } else {
+                    let ans = (response.data && response.data[field.label] !== undefined)
+                        ? response.data[field.label]
+                        : ((response.data_uid && field.field_uid) ? (response.data_uid[field.field_uid] ?? '') : '');
+                    if (Array.isArray(ans)) ans = ans.join(', ');
+                    const text = String(ans ?? '');
+                    cell.className = 'text-truncate';
+                    cell.style.maxWidth = '100px';
+                    if (text.length > 18) {
+                        cell.setAttribute('data-bs-toggle', 'tooltip');
+                        cell.setAttribute('data-bs-placement', 'top');
+                        cell.setAttribute('title', text);
+                        cell.style.cursor = 'help';
+                        cell.textContent = text.substring(0, 18) + '…';
+                    } else {
+                        cell.textContent = text || '—';
+                    }
+                }
+            });
+
+            // Celda Acción Ver
+            const cellAcc = row.insertCell();
+            const sidEsc = (response.submission_id || '').replace(/"/g, '&quot;');
+            cellAcc.innerHTML = `<button class="btn btn-sm btn-outline-info btn-view-response" data-submission-id="${sidEsc}" title="Ver respuesta completa"><i class="fas fa-eye"></i></button>`;
+        });
+
+        table.appendChild(tbody);
+        summaryResponsesTableContainer.appendChild(table);
+
+        // Inicializar tooltips de la tabla de resumen
+        table.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(function(el) {
+            new bootstrap.Tooltip(el);
+        });
+    }
+
+    // --- Event delegation: botón "Ver respuesta" en tabla de Respuestas Individuales ---
+    document.addEventListener('click', function(e) {
+        const btn = e.target.closest('.btn-view-response');
+        if (!btn) return;
+        const submissionId = btn.dataset.submissionId;
+        openViewResponseModal(submissionId);
+    });
+
+    // --- Función para abrir el modal de vista de respuesta individual ---
+    function openViewResponseModal(submissionId) {
+        const response = currentFormAllResponsesData.find(r => r.submission_id === submissionId);
+        if (!response) {
+            showToast('No se encontró la respuesta seleccionada.', true);
+            return;
+        }
+
+        const fields = currentFormFieldsStructure;
+        const formTitle = currentFormTitleForAnalysis || 'Formulario';
+
+        // Rellenar cabecera del modal
+        document.getElementById('viewResponseModalFormTitle').textContent = formTitle;
+        document.getElementById('viewResponseModalSubId').textContent = response.submission_id || 'N/A';
+        document.getElementById('viewResponseModalDate').textContent = response.submitted_at
+            ? new Date(response.submitted_at).toLocaleString('es-ES')
+            : 'N/A';
+        document.getElementById('viewResponseModalIP').textContent = response.ip_address || 'N/A';
+
+        // Renderizar los campos
+        const body = document.getElementById('viewResponseModalBody');
+        body.innerHTML = '';
+
+        fields.forEach(function(field) {
+            const card = document.createElement('div');
+            card.className = 'form-modern-card mb-3';
+
+            const label = document.createElement('label');
+            label.className = 'form-label fw-bold';
+            label.textContent = field.label || '';
+            if (field.required) {
+                const req = document.createElement('span');
+                req.className = 'text-danger ms-1';
+                req.textContent = '*';
+                label.appendChild(req);
+            }
+            card.appendChild(label);
+
+            const type = field.type || 'text';
+            let answer = (response.data && response.data[field.label] !== undefined)
+                ? response.data[field.label]
+                : ((response.data_uid && field.field_uid && response.data_uid[field.field_uid] !== undefined)
+                    ? response.data_uid[field.field_uid]
+                    : '');
+
+            if (type === 'image') {
+                let imgUrl = '';
+                if (field.image_file_uploaded) imgUrl = 'uploads/' + field.image_file_uploaded;
+                else if (field.image_file_url) imgUrl = field.image_file_url;
+                if (imgUrl) {
+                    const img = document.createElement('img');
+                    img.src = imgUrl;
+                    img.alt = field.image_title || '';
+                    img.className = 'img-fluid rounded shadow-sm';
+                    img.style.maxWidth = '100%';
+                    card.appendChild(img);
+                    if (field.image_title) {
+                        const cap = document.createElement('div');
+                        cap.className = 'text-center text-muted small mt-1';
+                        cap.textContent = field.image_title;
+                        card.appendChild(cap);
+                    }
+                } else {
+                    card.appendChild(Object.assign(document.createElement('span'), { className: 'text-muted', textContent: 'Sin imagen.' }));
+                }
+            } else if (type === 'birthdate') {
+                let rawDate = (response.data && response.data['_raw_birthdate'])
+                    ? response.data['_raw_birthdate']
+                    : ((response.data && response.data[field.label + ' (fecha)']) || '');
+                const age = answer;
+                const row = document.createElement('div');
+                row.className = 'd-flex gap-3 flex-wrap';
+                row.innerHTML = `<div><span class="text-muted small">Fecha de nacimiento:</span><br>
+                    <span class="badge bg-info text-dark fs-6">${rawDate || 'N/D'}</span></div>
+                    <div><span class="text-muted small">Edad calculada:</span><br>
+                    <span class="badge bg-primary fs-6">${(age !== undefined && age !== null && age !== '') ? age + ' años' : 'N/D'}</span></div>`;
+                card.appendChild(row);
+            } else if (type === 'file') {
+                const val = answer;
+                if (val) {
+                    const a = document.createElement('a');
+                    a.href = 'uploads/' + val;
+                    a.target = '_blank';
+                    a.className = 'btn btn-outline-primary btn-sm';
+                    a.innerHTML = '<i class="fas fa-download me-1"></i> Descargar archivo';
+                    card.appendChild(a);
+                } else {
+                    card.appendChild(Object.assign(document.createElement('span'), { className: 'text-muted fst-italic', textContent: 'No se subió archivo.' }));
+                }
+            } else if (type === 'downloadable') {
+                const fileUp = field.file_uploaded || '';
+                const fileUrl = field.file_url || '';
+                if (fileUp) {
+                    const a = document.createElement('a');
+                    a.href = 'downloads/' + fileUp;
+                    a.target = '_blank';
+                    a.className = 'btn btn-outline-primary btn-sm';
+                    a.innerHTML = '<i class="fas fa-download me-1"></i> Descargar documento';
+                    card.appendChild(a);
+                } else if (fileUrl) {
+                    const a = document.createElement('a');
+                    a.href = fileUrl;
+                    a.target = '_blank';
+                    a.className = 'btn btn-outline-primary btn-sm';
+                    a.innerHTML = '<i class="fas fa-download me-1"></i> Descargar documento';
+                    card.appendChild(a);
+                } else {
+                    card.appendChild(Object.assign(document.createElement('span'), { className: 'badge bg-secondary', textContent: 'No hay documento.' }));
+                }
+            } else if (type === 'radio') {
+                const options = Array.isArray(field.options)
+                    ? field.options
+                    : (typeof field.options === 'string' ? field.options.split(/\r?\n/) : []);
+                options.forEach(function(opt) {
+                    const optTrim = opt.trim();
+                    if (!optTrim) return;
+                    const div = document.createElement('div');
+                    div.className = 'form-check';
+                    const input = document.createElement('input');
+                    input.type = 'radio';
+                    input.className = 'form-check-input';
+                    input.disabled = true;
+                    input.checked = (answer === optTrim || answer === opt);
+                    const lbl = document.createElement('label');
+                    lbl.className = 'form-check-label';
+                    lbl.textContent = optTrim;
+                    div.appendChild(input);
+                    div.appendChild(lbl);
+                    card.appendChild(div);
+                });
+            } else if (type === 'checkbox') {
+                const options = Array.isArray(field.options)
+                    ? field.options
+                    : (typeof field.options === 'string' ? field.options.split(/\r?\n/) : []);
+                const selected = Array.isArray(answer) ? answer : (answer ? [answer] : []);
+                options.forEach(function(opt) {
+                    const optTrim = opt.trim();
+                    if (!optTrim) return;
+                    const div = document.createElement('div');
+                    div.className = 'form-check';
+                    const input = document.createElement('input');
+                    input.type = 'checkbox';
+                    input.className = 'form-check-input';
+                    input.disabled = true;
+                    input.checked = selected.includes(optTrim) || selected.includes(opt);
+                    const lbl = document.createElement('label');
+                    lbl.className = 'form-check-label';
+                    lbl.textContent = optTrim;
+                    div.appendChild(input);
+                    div.appendChild(lbl);
+                    card.appendChild(div);
+                });
+            } else if (type === 'select') {
+                const input = document.createElement('select');
+                input.className = 'form-select';
+                input.disabled = true;
+                const options = Array.isArray(field.options)
+                    ? field.options
+                    : (typeof field.options === 'string' ? field.options.split(/\r?\n/) : []);
+                const selected = Array.isArray(answer) ? answer : (answer ? [answer] : []);
+                options.forEach(function(opt) {
+                    const optTrim = opt.trim();
+                    if (!optTrim) return;
+                    const o = document.createElement('option');
+                    o.value = optTrim;
+                    o.textContent = optTrim;
+                    if (selected.includes(optTrim)) o.selected = true;
+                    input.appendChild(o);
+                });
+                card.appendChild(input);
+            } else if (type === 'textarea') {
+                const ta = document.createElement('textarea');
+                ta.className = 'form-control';
+                ta.rows = 3;
+                ta.disabled = true;
+                ta.value = Array.isArray(answer) ? answer.join(', ') : (answer || '');
+                card.appendChild(ta);
+            } else if (type === 'terms') {
+                if (field.terms_text) {
+                    const termsDiv = document.createElement('div');
+                    termsDiv.className = 'terms-text-display mb-2';
+                    termsDiv.textContent = field.terms_text;
+                    card.appendChild(termsDiv);
+                }
+                ['agree', 'disagree'].forEach(function(val) {
+                    const div = document.createElement('div');
+                    div.className = 'form-check form-check-inline';
+                    const input = document.createElement('input');
+                    input.type = 'radio';
+                    input.className = 'form-check-input';
+                    input.disabled = true;
+                    input.checked = (answer === val);
+                    const lbl = document.createElement('label');
+                    lbl.className = 'form-check-label small';
+                    lbl.textContent = val === 'agree' ? 'Estoy de acuerdo' : 'No estoy de acuerdo';
+                    div.appendChild(input);
+                    div.appendChild(lbl);
+                    card.appendChild(div);
+                });
+            } else if (type === 'accept_only_terms') {
+                const div = document.createElement('div');
+                div.className = 'form-check';
+                const input = document.createElement('input');
+                input.type = 'checkbox';
+                input.className = 'form-check-input';
+                input.disabled = true;
+                input.checked = (answer === 'on' || answer === true || answer === '1');
+                const lbl = document.createElement('label');
+                lbl.className = 'form-check-label';
+                lbl.textContent = field.terms_text || 'Acepto los términos y condiciones.';
+                div.appendChild(input);
+                div.appendChild(lbl);
+                card.appendChild(div);
+            } else {
+                // text, email, tel, number, date y desconocidos
+                const input = document.createElement('input');
+                input.type = (type === 'number' || type === 'date' || type === 'email' || type === 'tel') ? type : 'text';
+                input.className = 'form-control';
+                input.disabled = true;
+                input.value = Array.isArray(answer) ? answer.join(', ') : (answer || '');
+                card.appendChild(input);
+            }
+
+            body.appendChild(card);
+        });
+
+        // Mostrar modal
+        const modalEl = document.getElementById('viewResponseModal');
+        if (!modalEl) return;
+        const modalInstance = bootstrap.Modal.getOrCreateInstance(modalEl);
+        modalInstance.show();
     }
 
 }); // Cierre del DOMContentLoaded listener
