@@ -569,6 +569,11 @@ $GLOBALS['user_count'] = $user_count; // Añadido para pasar al navbar
                             <i class="fas fa-list-alt me-1"></i>Respuestas Individuales (<span id="responsesCountBadge" class="badge bg-secondary">0</span>)
                         </button>
                     </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link hvr-underline-from-left" id="summary-responses-tab" data-bs-toggle="tab" data-bs-target="#summary-responses-tab-pane" type="button" role="tab" aria-controls="summary-responses-tab-pane" aria-selected="false">
+                            <i class="fas fa-mobile-alt me-1"></i>Resumen
+                        </button>
+                    </li>
                 </ul>
                 <div class="tab-content" id="analysisTabsContent">
                     <div class="tab-pane fade show active p-2" id="charts-tab-pane" role="tabpanel" aria-labelledby="charts-tab" tabindex="0">
@@ -586,12 +591,51 @@ $GLOBALS['user_count'] = $user_count; // Añadido para pasar al navbar
                             </button>
                         </div>
                     </div>
+                    <div class="tab-pane fade p-2" id="summary-responses-tab-pane" role="tabpanel" aria-labelledby="summary-responses-tab" tabindex="0">
+                        <p class="text-muted small mb-2"><i class="fas fa-info-circle me-1"></i>Vista compacta: ID y las primeras 5 columnas del formulario. Ideal para móvil.</p>
+                        <div id="summaryResponsesTableContainer" class="table-responsive">
+                            <p class="text-muted text-center">Selecciona un formulario para ver el resumen.</p>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     </main>
 
     <?php include 'footer.php'; ?>
+
+    <!-- Modal: Ver Respuesta Individual -->
+    <div class="modal fade" id="viewResponseModal" tabindex="-1" aria-labelledby="viewResponseModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-xl modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header" style="background: linear-gradient(135deg, #4b6cb7 0%, #182848 100%); color: white;">
+                    <div>
+                        <h5 class="modal-title mb-0" id="viewResponseModalLabel">
+                            <i class="fas fa-eye me-2"></i>Vista de Respuesta
+                        </h5>
+                        <small id="viewResponseModalFormTitle" class="opacity-75 d-block mt-1"></small>
+                    </div>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+                <div class="modal-body px-4 pt-3">
+                    <!-- Metadatos de la respuesta -->
+                    <div class="alert alert-light border d-flex flex-wrap gap-3 align-items-center mb-4 py-2">
+                        <span><i class="fas fa-fingerprint me-1 text-secondary"></i><strong>ID:</strong> <code id="viewResponseModalSubId"></code></span>
+                        <span><i class="fas fa-calendar-alt me-1 text-secondary"></i><strong>Fecha:</strong> <span id="viewResponseModalDate"></span></span>
+                        <span><i class="fas fa-network-wired me-1 text-secondary"></i><strong>IP:</strong> <span id="viewResponseModalIP"></span></span>
+                        <span class="badge bg-warning text-dark ms-auto"><i class="fas fa-lock me-1"></i>Solo lectura</span>
+                    </div>
+                    <!-- Campos del formulario pre-llenados (inyectados por JS) -->
+                    <div id="viewResponseModalBody"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times me-1"></i>Cerrar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <div class="modal fade" id="createEditFormModal" tabindex="-1" aria-labelledby="createEditFormModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-xl modal-dialog-scrollable"> 
