@@ -235,6 +235,15 @@ body.login-page {
     }
 }
 
+/* Columna Título/Estado: contener texto largo en flex sin desbordamiento */
+.table-custom .form-title {
+    white-space: normal;
+    word-break: break-word;
+    overflow-wrap: break-word;
+    min-width: 0;
+    display: block;
+}
+
 /* --- Tablas modernas y responsivas para DataTables + Bootstrap 5 --- */
 .table-custom {
     border-radius: 12px;
@@ -533,4 +542,84 @@ body.login-page {
     flex-direction: column;
     align-items: center;
     justify-content: center;
+}
+
+/* Estilos para botones de ayuda en campos de formulario */
+.field-help-btn {
+    border-radius: 50% !important;
+    width: 28px !important;
+    height: 28px !important;
+    padding: 0 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: 0.85rem !important;
+    transition: all 0.2s ease-in-out !important;
+    border: 1px solid rgba(13, 110, 253, 0.3) !important;
+    background-color: rgba(13, 110, 253, 0.05) !important;
+    color: var(--bs-info) !important;
+}
+
+.field-help-btn:hover,
+.field-help-btn:focus {
+    background-color: var(--bs-info) !important;
+    color: white !important;
+    transform: scale(1.1) !important;
+    box-shadow: 0 2px 8px rgba(13, 110, 253, 0.3) !important;
+    border-color: var(--bs-info) !important;
+}
+
+.field-help-btn i {
+    font-size: 0.75rem !important;
+}
+
+/* Estilos para el popover de ayuda */
+.popover {
+    --bs-popover-max-width: 280px;
+    --bs-popover-border-radius: 0.75rem;
+    --bs-popover-border-color: rgba(13, 110, 253, 0.2);
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+    font-size: 0.9rem;
+}
+
+.popover-header {
+    background-color: var(--bs-info) !important;
+    color: white !important;
+    border-bottom: none !important;
+    font-weight: 600 !important;
+    font-size: 0.85rem !important;
+}
+
+.popover-body {
+    font-size: 0.9rem !important;
+    line-height: 1.4 !important;
+    color: var(--bs-body-color) !important;
+}
+
+/* Estilos para tema oscuro */
+[data-bs-theme="dark"] .field-help-btn {
+    background-color: rgba(13, 110, 253, 0.1) !important;
+    border-color: rgba(13, 110, 253, 0.4) !important;
+    color: #90cdf4 !important;
+}
+
+[data-bs-theme="dark"] .field-help-btn:hover,
+[data-bs-theme="dark"] .field-help-btn:focus {
+    background-color: #90cdf4 !important;
+    color: #1a1d20 !important;
+    border-color: #90cdf4 !important;
+}
+
+[data-bs-theme="dark"] .popover {
+    --bs-popover-bg: #2d3748;
+    --bs-popover-border-color: rgba(255, 255, 255, 0.1);
+}
+
+[data-bs-theme="dark"] .popover-header {
+    background-color: #90cdf4 !important;
+    color: #1a1d20 !important;
+}
+
+[data-bs-theme="dark"] .popover-body {
+    color: #e2e8f0 !important;
 }
