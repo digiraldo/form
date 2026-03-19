@@ -398,9 +398,9 @@ document.addEventListener('DOMContentLoaded', function () {
                                     const titleWithTooltip = `<div class="fw-bold form-title" data-bs-toggle="tooltip" data-bs-placement="top" title="ID del Formulario: ${row.id}">${revisedTitle}</div>`;
 
                                     // 3. Combinar elementos
-                                    return `<div class="d-flex align-items-center">
+                                    return `<div class="d-flex align-items-center" style="min-width:0;overflow:hidden;">
                                                 ${fieldCountBadge}
-                                                ${titleWithTooltip}
+                                                <div style="min-width:0;flex:1 1 0%;overflow:hidden;">${titleWithTooltip}</div>
                                             </div>`;
                                 }
                             },                            // 2. Área
